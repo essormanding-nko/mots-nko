@@ -112,6 +112,19 @@
 
   .toast { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 15px; z-index: 40; max-width: 90%; text-align: center; }
   .busy { position: fixed; inset: 0; background: rgba(255,255,255,.75); display: flex; align-items: center; justify-content: center; z-index: 50; font-weight: 700; color: var(--primary); font-size: 18px; }
+
+  .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { flex: 0 0 auto; padding: 13px 16px; white-space: nowrap; }
+  .tabs button.tool { color: var(--accent); }
+  .audio-btn { margin-top: 6px; padding: 10px 16px; border-radius: 24px; border: 2px solid var(--primary); background: #fff; color: var(--primary); font-weight: 700; }
+  .bubble audio { width: 100%; margin-top: 6px; }
+  .rec { text-align: center; }
+  .rec .time { font-size: 34px; color: var(--danger); font-weight: 700; margin: 16px 0; }
+  .chk { display: flex; gap: 10px; align-items: center; padding: 10px 4px; border-bottom: 1px solid var(--line); font-weight: 600; }
+  .chk input { width: 22px; height: 22px; }
+  .gcard { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .gcard .name { flex: 1; }
 </style>
 </head>
 <body>
@@ -134,11 +147,7 @@
 
 <!-- Application -->
 <section id="viewApp" class="hidden">
-  <nav class="tabs">
-    <button data-tab="TSE" class="active">TSE-FA</button>
-    <button data-tab="TSS">TSS-FA</button>
-    <button data-tab="students">Élèves</button>
-  </nav>
+  <nav id="tabs" class="tabs"></nav>
   <main>
     <div id="viewGroup">
       <div class="group-bar">
@@ -151,12 +160,14 @@
     <div id="viewStudents" class="students hidden">
       <button id="btnAdd" class="btn">+ Ajouter un élève</button>
       <div id="count" class="count"></div>
-      <div class="filter">
-        <button data-f="all" class="active">Tous</button>
-        <button data-f="TSE">TSE-FA</button>
-        <button data-f="TSS">TSS-FA</button>
-      </div>
+      <div id="filter" class="filter" style="flex-wrap:wrap"></div>
       <div id="studentList"></div>
+    </div>
+
+    <div id="viewGroups" class="students hidden">
+      <button id="btnNewGroup" class="btn">+ Créer un groupe</button>
+      <p class="count">Les élèves voient seulement les groupes que vous leur attribuez (onglet Élèves → « Groupes »).</p>
+      <div id="groupList"></div>
     </div>
   </main>
 
@@ -168,6 +179,7 @@
     </div>
     <div class="row">
       <button id="btnPhoto" class="icon-btn light" title="Photo">📷</button>
+      <button id="btnMic" class="icon-btn light" title="Vocal">🎤</button>
       <textarea id="text" rows="1" placeholder="Écrire un message…"></textarea>
       <button id="btnSend" class="icon-btn" title="Envoyer">➤</button>
     </div>
@@ -192,13 +204,13 @@
   };
   const DOMAIN = "ppbac.app";
   const ADMIN_EMAIL = "admin@" + DOMAIN;
-  const GROUPS = { TSE: "TSE-FA — Sciences expérimentales", TSS: "TSS-FA — Sciences sociales" };
-  const MAX_B64 = 860000; // ≈ 650 Ko : sous la limite de 1 Mo d'un document Firestore
+  const DEFAULT_GROUPS = { TSE: "TSE-FA — Sciences expérimentales", TSS: "TSS-FA — Sciences sociales" };
+  const MAX_B64 = 900000;      // limite d'un document Firestore (1 Mo)
+  const MAX_REC = 180;         // durée maximale d'un vocal (secondes)
 
   firebase.initializeApp(CONFIG);
   const auth = firebase.auth();
   const db = firebase.firestore();
-  // Deuxième connexion pour créer les élèves sans déconnecter le professeur
   const creatorApp = firebase.initializeApp(CONFIG, "creator");
   const creatorAuth = creatorApp.auth();
   creatorAuth.setPersistence(firebase.auth.Auth.Persistence.NONE);
@@ -206,12 +218,13 @@
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-  let current = "TSE";
-  let unsubFeed = null, unsubGroup = null, unsubStudents = null;
-  let pendingPhoto = null; // base64
+  let groups = {};            // id -> nom
+  let current = null;         // onglet ouvert : id de groupe, "students" ou "groups"
+  let unsubFeed = null, unsubGroup = null, unsubStudents = null, unsubGroups = null;
+  let pendingPhoto = null;
   let students = [];
   let studentFilter = "all";
-  const imgCache = {};
+  const imgCache = {}, audioCache = {};
 
   // ---------- Outils ----------
   function toast(msg) {
@@ -250,7 +263,17 @@
     const p = (n) => String(n).padStart(2, "0");
     return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
   }
+  const fmtDur = (s) => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
   function randomPw() { return String(Math.floor(100000 + Math.random() * 900000)); }
+  function memberships(s) {
+    if (Array.isArray(s.groups)) return s.groups;
+    return s.group ? [s.group] : [];
+  }
+  function sortedGroups() {
+    return Object.keys(groups).map((id) => ({ id, name: groups[id] }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+  function shortName(id) { return (groups[id] || id).split(" — ")[0]; }
 
   // ---------- Connexion ----------
   auth.onAuthStateChanged((user) => {
@@ -258,8 +281,7 @@
       $("viewLogin").classList.add("hidden");
       $("viewApp").classList.remove("hidden");
       $("btnLogout").classList.remove("hidden");
-      ensureGroups();
-      openTab(current);
+      startApp();
     } else {
       if (user) auth.signOut();
       stopAll();
@@ -307,37 +329,76 @@
 
   $("btnLogout").onclick = () => { if (confirm("Se déconnecter ?")) auth.signOut(); };
 
-  function ensureGroups() {
-    const batch = db.batch();
-    Object.keys(GROUPS).forEach((g) => batch.set(db.collection("groups").doc(g), { name: GROUPS[g] }, { merge: true }));
-    batch.commit().catch(() => {});
-  }
   function stopAll() {
-    [unsubFeed, unsubGroup, unsubStudents].forEach((u) => u && u());
-    unsubFeed = unsubGroup = unsubStudents = null;
+    [unsubFeed, unsubGroup, unsubStudents, unsubGroups].forEach((u) => u && u());
+    unsubFeed = unsubGroup = unsubStudents = unsubGroups = null;
+    current = null;
+  }
+
+  function startApp() {
+    if (unsubGroups) return;
+    let first = true;
+    unsubGroups = db.collection("groups").onSnapshot((snap) => {
+      if (first && snap.empty) {
+        // Premier lancement : créer les deux groupes de départ
+        const b = db.batch();
+        Object.keys(DEFAULT_GROUPS).forEach((g) => b.set(db.collection("groups").doc(g), { name: DEFAULT_GROUPS[g], studentsCanPost: false }));
+        b.commit();
+      }
+      first = false;
+      groups = {};
+      snap.docs.forEach((d) => { groups[d.id] = d.data().name || d.id; });
+      renderTabs();
+      if (!current || (current !== "students" && current !== "groups" && !groups[current])) {
+        const g = sortedGroups()[0];
+        openTab(g ? g.id : "groups");
+      }
+      if (current === "groups") renderGroupsAdmin();
+      if (current === "students") renderStudents();
+    }, (e) => toast(errText(e)));
   }
 
   // ---------- Onglets ----------
-  document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => openTab(b.dataset.tab));
+  function renderTabs() {
+    const nav = $("tabs");
+    nav.innerHTML = "";
+    const add = (id, label, cls) => {
+      const b = document.createElement("button");
+      b.textContent = label; b.dataset.tab = id;
+      if (cls) b.className = cls;
+      if (id === current) b.classList.add("active");
+      b.onclick = () => openTab(id);
+      nav.appendChild(b);
+    };
+    sortedGroups().forEach((g) => add(g.id, shortName(g.id)));
+    add("students", "👥 Élèves", "tool");
+    add("groups", "⚙ Groupes", "tool");
+  }
 
   function openTab(tab) {
-    document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+    current = tab;
+    document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
     if (unsubFeed) { unsubFeed(); unsubFeed = null; }
     if (unsubGroup) { unsubGroup(); unsubGroup = null; }
+    $("viewGroup").classList.add("hidden");
+    $("viewStudents").classList.add("hidden");
+    $("viewGroups").classList.add("hidden");
+    $("composer").classList.add("hidden");
     if (tab === "students") {
-      $("viewGroup").classList.add("hidden");
-      $("composer").classList.add("hidden");
       $("viewStudents").classList.remove("hidden");
       watchStudents();
-      return;
+      renderStudents();
+    } else if (tab === "groups") {
+      $("viewGroups").classList.remove("hidden");
+      renderGroupsAdmin();
+    } else {
+      $("viewGroup").classList.remove("hidden");
+      $("composer").classList.remove("hidden");
+      $("groupLabel").textContent = "Les élèves de " + shortName(tab) + " peuvent écrire";
+      watchGroup(tab);
+      watchFeed(tab);
     }
-    current = tab;
-    $("viewStudents").classList.add("hidden");
-    $("viewGroup").classList.remove("hidden");
-    $("composer").classList.remove("hidden");
-    $("groupLabel").textContent = "Les élèves de " + (tab === "TSE" ? "TSE-FA" : "TSS-FA") + " peuvent écrire";
-    watchGroup(tab);
-    watchFeed(tab);
+    window.scrollTo(0, 0);
   }
 
   // ---------- Groupe ----------
@@ -360,7 +421,7 @@
       .orderBy("createdAt", "asc").limitToLast(300)
       .onSnapshot((snap) => {
         const atBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 80;
-        if (snap.empty) { feed.innerHTML = '<div class="empty">Aucune publication pour le moment.<br>Envoyez la première photo avec 📷.</div>'; return; }
+        if (snap.empty) { feed.innerHTML = '<div class="empty">Aucune publication pour le moment.<br>Envoyez une photo 📷, un vocal 🎤 ou un message.</div>'; return; }
         feed.innerHTML = "";
         snap.docs.forEach((d) => feed.appendChild(renderMsg(g, d.id, d.data())));
         if (atBottom || feed.dataset.first !== g) { window.scrollTo(0, document.body.scrollHeight); feed.dataset.first = g; }
@@ -374,6 +435,7 @@
       '<div class="who"><span>' + esc(m.isAdmin ? "Prof Polyvalent" : m.senderName) + "</span>" +
       '<button data-del>Supprimer</button></div>' +
       (m.hasImage ? '<div class="photo">Chargement de la photo…</div>' : "") +
+      (m.hasAudio ? '<div class="voice"><button class="audio-btn">▶ Écouter le vocal (' + fmtDur(m.audioSeconds || 0) + ")</button></div>" : "") +
       (m.text ? '<div class="txt">' + esc(m.text) + "</div>" : "") +
       '<div class="time">' + fmtTime(m.createdAt) + "</div>";
     el.querySelector("[data-del]").onclick = () => {
@@ -382,6 +444,7 @@
       const b = db.batch();
       b.delete(ref.collection("messages").doc(id));
       if (m.hasImage) b.delete(ref.collection("images").doc(id));
+      if (m.hasAudio) b.delete(ref.collection("audios").doc(id));
       b.commit().then(() => toast("Message supprimé")).catch((e) => toast(errText(e)));
     };
     if (m.hasImage) {
@@ -402,6 +465,28 @@
         })
         .catch(() => { box.textContent = "Photo indisponible."; });
     }
+    if (m.hasAudio) {
+      const holder = el.querySelector(".voice");
+      const play = (src) => {
+        holder.innerHTML = "";
+        const a = document.createElement("audio");
+        a.controls = true; a.src = src;
+        holder.appendChild(a);
+        a.play().catch(() => {});
+      };
+      holder.querySelector("button").onclick = () => {
+        if (audioCache[id]) { play(audioCache[id]); return; }
+        holder.querySelector("button").textContent = "Chargement…";
+        db.collection("groups").doc(g).collection("audios").doc(id).get()
+          .then((s) => {
+            if (!s.exists) { holder.textContent = "Vocal supprimé."; return; }
+            const d = s.data();
+            audioCache[id] = "data:" + (d.mime || "audio/mp4") + ";base64," + d.data;
+            play(audioCache[id]);
+          })
+          .catch(() => { holder.textContent = "Vocal indisponible."; });
+      };
+    }
     return el;
   }
 
@@ -414,7 +499,7 @@
     document.body.appendChild(lb);
   }
 
-  // ---------- Envoi ----------
+  // ---------- Envoi texte / photo ----------
   const ta = $("text");
   ta.addEventListener("input", () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 140) + "px"; });
 
@@ -455,9 +540,21 @@
       ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
       ctx.drawImage(img, 0, 0, c.width, c.height);
       const b64 = c.toDataURL("image/jpeg", q).split(",")[1];
-      if (b64.length <= MAX_B64 || (q <= 0.45 && maxSide <= 900)) return b64;
+      if (b64.length <= 860000 || (q <= 0.45 && maxSide <= 900)) return b64;
       if (q > 0.55) q -= 0.1; else maxSide = Math.round(maxSide * 0.8);
     }
+  }
+
+  function newMessage(extra) {
+    return Object.assign({
+      senderUid: auth.currentUser.uid,
+      senderName: "Prof Polyvalent",
+      isAdmin: true,
+      text: ta.value.trim(),
+      hasImage: false,
+      hasAudio: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, extra || {});
   }
 
   $("btnSend").onclick = () => {
@@ -465,18 +562,12 @@
     if (!text && !pendingPhoto) return;
     const ref = db.collection("groups").doc(current);
     const msgRef = ref.collection("messages").doc();
-    const data = {
-      senderUid: auth.currentUser.uid,
-      senderName: "Prof Polyvalent",
-      isAdmin: true,
-      text: text,
-      hasImage: !!pendingPhoto,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
     const b = db.batch();
-    if (pendingPhoto) b.set(ref.collection("images").doc(msgRef.id), { data: pendingPhoto });
-    b.set(msgRef, data);
-    if (pendingPhoto) imgCache[msgRef.id] = "data:image/jpeg;base64," + pendingPhoto;
+    if (pendingPhoto) {
+      b.set(ref.collection("images").doc(msgRef.id), { data: pendingPhoto });
+      imgCache[msgRef.id] = "data:image/jpeg;base64," + pendingPhoto;
+    }
+    b.set(msgRef, newMessage({ hasImage: !!pendingPhoto }));
     busy(true, pendingPhoto ? "Envoi de la photo…" : "Envoi…");
     b.commit()
       .then(() => {
@@ -488,51 +579,214 @@
       .finally(() => busy(false));
   };
 
-  // ---------- Élèves ----------
-  document.querySelectorAll(".filter button").forEach((b) => b.onclick = () => {
-    studentFilter = b.dataset.f;
-    document.querySelectorAll(".filter button").forEach((x) => x.classList.toggle("active", x === b));
-    renderStudents();
-  });
+  // ---------- Vocal ----------
+  function pickMime() {
+    if (!window.MediaRecorder) return null;
+    const list = ["audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
+    for (const t of list) if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) return t;
+    return "";
+  }
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(",")[1]);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
 
+  $("btnMic").onclick = async () => {
+    const mime = pickMime();
+    if (mime === null || !navigator.mediaDevices) { toast("L'enregistrement vocal n'est pas possible sur ce navigateur."); return; }
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      toast("Autorisez le micro pour enregistrer un vocal.");
+      return;
+    }
+    const opts = { audioBitsPerSecond: 24000 };
+    if (mime) opts.mimeType = mime;
+    let rec;
+    try { rec = new MediaRecorder(stream, opts); } catch (e) { rec = new MediaRecorder(stream); }
+    const chunks = [];
+    let cancelled = false;
+    const start = Date.now();
+    rec.ondataavailable = (ev) => { if (ev.data && ev.data.size) chunks.push(ev.data); };
+
+    const m = modal(
+      '<div class="rec"><h3>Enregistrement en cours…</h3>' +
+      '<div class="time" id="recTime">● 0:00</div>' +
+      '<p class="count">Maximum ' + fmtDur(MAX_REC) + '</p></div>' +
+      '<div class="row2"><button id="rNo" class="btn secondary">Annuler</button><button id="rOk" class="btn">Envoyer</button></div>'
+    );
+    const secs = () => Math.round((Date.now() - start) / 1000);
+    const timer = setInterval(() => {
+      const t = m.querySelector("#recTime");
+      if (t) t.textContent = "● " + fmtDur(secs()) + " / " + fmtDur(MAX_REC);
+      if (secs() >= MAX_REC && rec.state === "recording") rec.stop();
+    }, 300);
+
+    rec.onstop = async () => {
+      clearInterval(timer);
+      stream.getTracks().forEach((t) => t.stop());
+      closeModal();
+      if (cancelled) return;
+      const seconds = secs();
+      if (seconds < 1 || !chunks.length) { toast("Vocal trop court."); return; }
+      const type = rec.mimeType || mime || "audio/webm";
+      const blob = new Blob(chunks, { type: type });
+      const b64 = await blobToBase64(blob);
+      if (b64.length > MAX_B64) { toast("Vocal trop long, faites-le plus court."); return; }
+      const cleanMime = type.split(";")[0];
+      const ref = db.collection("groups").doc(current);
+      const msgRef = ref.collection("messages").doc();
+      audioCache[msgRef.id] = "data:" + cleanMime + ";base64," + b64;
+      const b = db.batch();
+      b.set(ref.collection("audios").doc(msgRef.id), { data: b64, mime: cleanMime });
+      b.set(msgRef, newMessage({ hasAudio: true, audioSeconds: seconds, audioMime: cleanMime }));
+      busy(true, "Envoi du vocal…");
+      b.commit()
+        .then(() => { ta.value = ""; ta.style.height = "auto"; window.scrollTo(0, document.body.scrollHeight); })
+        .catch((e) => toast("Vocal non envoyé : " + errText(e)))
+        .finally(() => busy(false));
+    };
+
+    m.querySelector("#rNo").onclick = () => { cancelled = true; if (rec.state === "recording") rec.stop(); };
+    m.querySelector("#rOk").onclick = () => { if (rec.state === "recording") rec.stop(); };
+    rec.start(1000);
+  };
+
+  // ---------- Gestion des groupes ----------
+  function renderGroupsAdmin() {
+    const list = $("groupList");
+    const all = sortedGroups();
+    if (!all.length) { list.innerHTML = '<div class="empty">Aucun groupe. Créez le premier.</div>'; return; }
+    list.innerHTML = "";
+    all.forEach((g) => {
+      const n = students.filter((s) => memberships(s).includes(g.id) && s.active).length;
+      const c = document.createElement("div");
+      c.className = "card";
+      c.innerHTML =
+        '<div class="name">' + esc(g.name) + "</div>" +
+        '<div class="info">' + (unsubStudents ? n + " élève(s) actif(s)" : "") + "</div>" +
+        '<div class="actions"><button data-a="open">Ouvrir</button><button data-a="rename">Renommer</button>' +
+        '<button class="red" data-a="delete">Supprimer</button></div>';
+      c.querySelector('[data-a="open"]').onclick = () => openTab(g.id);
+      c.querySelector('[data-a="rename"]').onclick = () => groupNameDialog(g.id, g.name);
+      c.querySelector('[data-a="delete"]').onclick = () => {
+        if (!confirm("Supprimer le groupe « " + g.name + " » ? Les élèves ne le verront plus.")) return;
+        db.collection("groups").doc(g.id).delete()
+          .then(() => toast("Groupe supprimé."))
+          .catch((e) => toast(errText(e)));
+      };
+      list.appendChild(c);
+    });
+    watchStudents();
+  }
+
+  function groupNameDialog(id, oldName) {
+    const m = modal(
+      "<h3>" + (id ? "Renommer le groupe" : "Nouveau groupe") + "</h3>" +
+      '<input id="gName" class="field" placeholder="Nom du groupe (ex : Philosophie TSS-FA)" value="' + esc(oldName || "") + '">' +
+      '<div id="gErr" class="msg-error"></div>' +
+      '<div class="row2"><button id="gNo" class="btn secondary">Annuler</button><button id="gOk" class="btn">' + (id ? "Enregistrer" : "Créer") + "</button></div>"
+    );
+    m.querySelector("#gNo").onclick = closeModal;
+    m.querySelector("#gOk").onclick = () => {
+      const name = m.querySelector("#gName").value.trim();
+      if (!name) { m.querySelector("#gErr").textContent = "Donnez un nom au groupe."; return; }
+      const p = id
+        ? db.collection("groups").doc(id).set({ name }, { merge: true })
+        : db.collection("groups").add({ name, studentsCanPost: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      p.then(() => { closeModal(); toast(id ? "Groupe renommé." : "Groupe créé ✅"); })
+        .catch((e) => { m.querySelector("#gErr").textContent = errText(e); });
+    };
+  }
+  $("btnNewGroup").onclick = () => groupNameDialog(null, "");
+
+  // ---------- Élèves ----------
   function watchStudents() {
     if (unsubStudents) return;
     unsubStudents = db.collection("users").where("role", "==", "student").onSnapshot((snap) => {
       students = snap.docs.map((d) => Object.assign({ uid: d.id }, d.data()));
-      students.sort((a, b) => (a.group || "").localeCompare(b.group || "") || (a.name || "").localeCompare(b.name || ""));
-      renderStudents();
+      students.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      if (current === "students") renderStudents();
+      if (current === "groups") renderGroupsAdmin();
     }, (e) => { $("studentList").innerHTML = '<div class="empty">' + esc(errText(e)) + "</div>"; });
   }
 
+  function renderFilter() {
+    const f = $("filter");
+    f.innerHTML = "";
+    const add = (id, label) => {
+      const b = document.createElement("button");
+      b.textContent = label;
+      if (studentFilter === id) b.classList.add("active");
+      b.onclick = () => { studentFilter = id; renderStudents(); };
+      f.appendChild(b);
+    };
+    add("all", "Tous");
+    sortedGroups().forEach((g) => add(g.id, shortName(g.id)));
+  }
+
   function renderStudents() {
-    const tse = students.filter((s) => s.group === "TSE" && s.active).length;
-    const tss = students.filter((s) => s.group === "TSS" && s.active).length;
-    $("count").textContent = "Actifs : " + tse + " en TSE-FA • " + tss + " en TSS-FA";
+    if (studentFilter !== "all" && !groups[studentFilter]) studentFilter = "all";
+    renderFilter();
+    const active = students.filter((s) => s.active).length;
+    $("count").textContent = students.length + " élève(s), dont " + active + " actif(s).";
     const list = $("studentList");
-    const shown = students.filter((s) => studentFilter === "all" || s.group === studentFilter);
-    if (!shown.length) { list.innerHTML = '<div class="empty">Aucun élève pour le moment.</div>'; return; }
+    const shown = students.filter((s) => studentFilter === "all" || memberships(s).includes(studentFilter));
+    if (!shown.length) { list.innerHTML = '<div class="empty">Aucun élève ici pour le moment.</div>'; return; }
     list.innerHTML = "";
     shown.forEach((s) => {
       const hasDevice = !!s.deviceId;
+      const gnames = memberships(s).filter((g) => groups[g]).map(shortName);
       const c = document.createElement("div");
       c.className = "card";
       c.innerHTML =
         '<div class="name">' + esc(s.name) + "</div>" +
-        '<div class="info">' + esc([s.group === "TSS" ? "TSS-FA" : "TSE-FA", s.username, s.phone].filter(Boolean).join(" • ")) + "</div>" +
+        '<div class="info">' + esc([s.username, s.phone].filter(Boolean).join(" • ")) + "</div>" +
+        '<div class="info">Groupes : ' + esc(gnames.length ? gnames.join(", ") : "aucun") + "</div>" +
         '<div class="status" style="color:' + (s.active ? "var(--ok)" : "var(--danger)") + '">' +
           (s.active ? (hasDevice ? "Actif — téléphone lié" : "Actif — pas encore connecté") : "Bloqué") + "</div>" +
         '<div class="actions">' +
+          '<button data-a="groups">Groupes</button>' +
           (s.active ? '<button class="red" data-a="block">Bloquer</button>' : '<button class="green" data-a="unblock">Débloquer</button>') +
           (hasDevice ? '<button data-a="unlink">Délier le téléphone</button>' : "") +
-          '<button data-a="group">Passer en ' + (s.group === "TSE" ? "TSS-FA" : "TSE-FA") + "</button>" +
         "</div>";
       c.querySelectorAll("[data-a]").forEach((btn) => btn.onclick = () => studentAction(s, btn.dataset.a));
       list.appendChild(c);
     });
   }
 
+  function groupChecks(selected) {
+    const all = sortedGroups();
+    if (!all.length) return '<p class="count">Créez d\'abord un groupe (onglet ⚙ Groupes).</p>';
+    return all.map((g) =>
+      '<label class="chk"><input type="checkbox" value="' + esc(g.id) + '"' + (selected.includes(g.id) ? " checked" : "") + "> " + esc(g.name) + "</label>"
+    ).join("");
+  }
+  function readChecks(m) {
+    return Array.from(m.querySelectorAll('.chk input:checked')).map((i) => i.value);
+  }
+
   function studentAction(s, a) {
     const ref = db.collection("users").doc(s.uid);
+    if (a === "groups") {
+      const m = modal(
+        "<h3>Groupes de " + esc(s.name) + "</h3>" + groupChecks(memberships(s)) +
+        '<div class="row2"><button id="gcNo" class="btn secondary">Annuler</button><button id="gcOk" class="btn">Enregistrer</button></div>'
+      );
+      m.querySelector("#gcNo").onclick = closeModal;
+      m.querySelector("#gcOk").onclick = () => {
+        const sel = readChecks(m);
+        ref.update({ groups: sel, group: firebase.firestore.FieldValue.delete() })
+          .then(() => { closeModal(); toast("Groupes mis à jour."); })
+          .catch((e) => toast(errText(e)));
+      };
+      return;
+    }
     let upd, msg;
     if (a === "block") {
       if (!confirm("Bloquer " + s.name + " ? Il sera déconnecté immédiatement.")) return;
@@ -542,24 +796,19 @@
     } else if (a === "unlink") {
       if (!confirm("Délier le téléphone de " + s.name + " ? Il pourra se connecter sur un nouveau téléphone.")) return;
       upd = { deviceId: null }; msg = "Téléphone délié.";
-    } else {
-      const other = s.group === "TSE" ? "TSS" : "TSE";
-      if (!confirm("Passer " + s.name + " dans " + GROUPS[other] + " ?")) return;
-      upd = { group: other }; msg = s.name + " est maintenant en " + (other === "TSE" ? "TSE-FA" : "TSS-FA") + ".";
-    }
+    } else return;
     ref.update(upd).then(() => toast(msg)).catch((e) => toast(errText(e)));
   }
 
   $("btnAdd").onclick = () => {
+    const preset = studentFilter !== "all" ? [studentFilter] : [];
     const m = modal(
       "<h3>Nouvel élève</h3>" +
       '<input id="aName" class="field" placeholder="Nom complet de l\'élève" autocapitalize="words">' +
       '<input id="aPhone" class="field" type="tel" placeholder="Numéro de téléphone">' +
       '<input id="aUser" class="field" placeholder="Identifiant (ex : fanta.kankan)" autocapitalize="none" autocorrect="off">' +
       '<input id="aPw" class="field" placeholder="Mot de passe" value="' + randomPw() + '" autocapitalize="none">' +
-      "<b>Groupe :</b>" +
-      '<label class="radio"><input type="radio" name="aGroup" value="TSE" checked> TSE-FA — Sciences expérimentales</label>' +
-      '<label class="radio"><input type="radio" name="aGroup" value="TSS"> TSS-FA — Sciences sociales</label>' +
+      "<b>Groupes :</b>" + groupChecks(preset) +
       '<div id="aErr" class="msg-error"></div>' +
       '<div class="row2"><button id="aNo" class="btn secondary">Annuler</button><button id="aOk" class="btn">Créer</button></div>'
     );
@@ -569,12 +818,13 @@
       const phone = m.querySelector("#aPhone").value.trim();
       const username = m.querySelector("#aUser").value.trim().toLowerCase().replace(/\s+/g, "");
       const pw = m.querySelector("#aPw").value.trim();
-      const group = m.querySelector('input[name="aGroup"]:checked').value;
+      const sel = readChecks(m);
       const err = m.querySelector("#aErr");
       if (!name) { err.textContent = "Le nom est obligatoire."; return; }
       if (!/^[a-z0-9._-]{3,30}$/.test(username)) { err.textContent = "Identifiant : 3 à 30 caractères (lettres, chiffres, point, tiret), sans accent ni espace."; return; }
       if (username === "admin") { err.textContent = "Identifiant réservé."; return; }
       if (pw.length < 6) { err.textContent = "Mot de passe : 6 caractères minimum."; return; }
+      if (!sel.length) { err.textContent = "Cochez au moins un groupe."; return; }
       const ok = m.querySelector("#aOk");
       ok.disabled = true; ok.textContent = "Création…";
       try {
@@ -582,10 +832,10 @@
         const uid = cred.user.uid;
         await creatorAuth.signOut();
         await db.collection("users").doc(uid).set({
-          name, phone, username, group, role: "student", active: true, deviceId: null,
+          name, phone, username, groups: sel, role: "student", active: true, deviceId: null,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-        showCreds(name, username, pw, group);
+        showCreds(name, username, pw, sel);
       } catch (e) {
         err.textContent = errText(e);
         ok.disabled = false; ok.textContent = "Créer";
@@ -593,9 +843,10 @@
     };
   };
 
-  function showCreds(name, username, pw, group) {
+  function showCreds(name, username, pw, sel) {
     const text = "Prof Polyvalent BAC\n" +
-      "Élève : " + name + " (" + GROUPS[group] + ")\n" +
+      "Élève : " + name + "\n" +
+      "Groupes : " + sel.map(shortName).join(", ") + "\n" +
       "Identifiant : " + username + "\n" +
       "Mot de passe : " + pw + "\n" +
       "⚠️ Votre compte ne fonctionne que sur un seul téléphone.";
