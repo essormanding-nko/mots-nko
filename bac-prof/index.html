@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Prof BAC">
+<meta name="theme-color" content="#0B3D91">
+<title>Prof Polyvalent BAC</title>
+<style>
+  :root {
+    --primary: #0B3D91; --primary-dark: #072A66; --accent: #E65100;
+    --bg: #FFFFFF; --surface: #F2F5FA; --line: #C9D3E3;
+    --text: #111111; --soft: #444444; --ok: #1B7F3B; --danger: #C62828;
+    --bubble-admin: #E3EDFF; --bubble-student: #F1F1F1;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 17px; }
+  button { font: inherit; cursor: pointer; }
+  input, textarea { font: inherit; color: var(--text); }
+  .hidden { display: none !important; }
+
+  header { background: var(--primary); color: #fff; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
+    display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
+  header h1 { font-size: 19px; margin: 0; }
+  header button { background: transparent; border: 1.5px solid #fff; color: #fff; border-radius: 8px; padding: 6px 10px; font-size: 14px; }
+
+  .tabs { display: flex; background: var(--surface); border-bottom: 2px solid var(--line); position: sticky; top: 52px; z-index: 4; }
+  .tabs button { flex: 1; border: 0; background: transparent; padding: 13px 4px; font-weight: 700; color: var(--soft); border-bottom: 4px solid transparent; }
+  .tabs button.active { color: var(--primary); border-bottom-color: var(--primary); background: #fff; }
+
+  main { max-width: 760px; margin: 0 auto; padding: 0 0 140px; }
+
+  /* Connexion */
+  .login { max-width: 420px; margin: 40px auto; padding: 0 20px; text-align: center; }
+  .login .logo { width: 84px; height: 84px; border-radius: 50%; background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 12px; }
+  .login h2 { color: var(--primary); margin: 0 0 4px; font-size: 26px; }
+  .login p { color: var(--soft); margin: 0 0 24px; }
+  .field { width: 100%; padding: 14px; border: 2px solid var(--line); border-radius: 10px; margin-bottom: 12px; background: #fff; }
+  .field:focus { outline: none; border-color: var(--primary); }
+  .btn { width: 100%; padding: 15px; border: 0; border-radius: 10px; background: var(--primary); color: #fff; font-weight: 700; font-size: 18px; }
+  .btn:disabled { opacity: .5; }
+  .btn.secondary { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+  .btn.danger { background: #fff; color: var(--danger); border: 2px solid var(--danger); }
+  .msg-error { color: var(--danger); font-weight: 600; margin-top: 12px; min-height: 22px; }
+  .link { background: none; border: 0; color: var(--soft); text-decoration: underline; margin-top: 40px; font-size: 14px; }
+
+  /* Groupe */
+  .group-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px 16px; background: #FFF3E0; border-bottom: 1px solid var(--accent); }
+  .group-bar b { font-size: 15px; }
+  .switch { position: relative; width: 56px; height: 32px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: #9E9E9E; border-radius: 32px; transition: .2s; }
+  .switch span::before { content: ""; position: absolute; width: 26px; height: 26px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+  .switch input:checked + span { background: var(--ok); }
+  .switch input:checked + span::before { transform: translateX(24px); }
+
+  .feed { padding: 10px 10px 0; }
+  .empty { text-align: center; color: var(--soft); padding: 40px 16px; }
+  .bubble { border-radius: 12px; padding: 10px; margin: 0 0 10px; border: 1px solid #9DB8EC; background: var(--bubble-admin); }
+  .bubble.student { background: var(--bubble-student); border-color: #D0D0D0; margin-left: 28px; }
+  .bubble .who { font-weight: 700; color: var(--primary); font-size: 14px; display: flex; justify-content: space-between; gap: 8px; }
+  .bubble .who button { border: 0; background: transparent; color: var(--danger); font-size: 13px; text-decoration: underline; padding: 0; }
+  .bubble .photo { margin-top: 6px; min-height: 120px; background: #E0E0E0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--soft); font-size: 14px; }
+  .bubble .photo img { width: 100%; height: auto; display: block; border-radius: 8px; }
+  .bubble .txt { margin-top: 6px; white-space: pre-wrap; word-wrap: break-word; }
+  .bubble .time { text-align: right; font-size: 12px; color: var(--soft); margin-top: 4px; }
+
+  .composer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 2px solid var(--line);
+    padding: 8px; padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 6; }
+  .composer .row { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  .composer textarea { flex: 1; resize: none; border: 2px solid var(--primary); border-radius: 20px; padding: 10px 14px; min-height: 46px; max-height: 140px; background: #fff; }
+  .icon-btn { flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--primary); color: #fff; font-size: 22px; }
+  .icon-btn.light { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+  .preview { max-width: 760px; margin: 0 auto 8px; display: flex; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 6px; }
+  .preview img { width: 64px; height: 64px; object-fit: cover; border-radius: 6px; }
+  .preview span { flex: 1; font-size: 14px; color: var(--soft); }
+  .preview button { border: 0; background: none; color: var(--danger); font-weight: 700; }
+
+  /* Élèves */
+  .students { padding: 12px; }
+  .count { color: var(--soft); font-size: 14px; margin: 10px 4px; }
+  .filter { display: flex; gap: 8px; margin-bottom: 8px; }
+  .filter button { flex: 1; padding: 9px; border-radius: 20px; border: 2px solid var(--primary); background: #fff; color: var(--primary); font-weight: 700; font-size: 14px; }
+  .filter button.active { background: var(--primary); color: #fff; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 8px; }
+  .card .name { font-weight: 700; font-size: 17px; }
+  .card .info { color: var(--soft); font-size: 14px; margin-top: 2px; }
+  .card .status { font-weight: 700; font-size: 14px; margin-top: 4px; }
+  .card .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .card .actions button { padding: 8px 10px; border-radius: 8px; border: 1.5px solid var(--primary); background: #fff; color: var(--primary); font-size: 14px; font-weight: 600; }
+  .card .actions button.red { border-color: var(--danger); color: var(--danger); }
+  .card .actions button.green { border-color: var(--ok); color: var(--ok); }
+
+  /* Fenêtres */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 20; padding: 16px; }
+  .modal .box { background: #fff; border-radius: 14px; padding: 20px; width: 100%; max-width: 440px; max-height: 92vh; overflow: auto; }
+  .modal h3 { margin: 0 0 14px; color: var(--primary); }
+  .modal label.radio { display: flex; gap: 8px; align-items: center; padding: 8px 0; font-weight: 600; }
+  .modal .row2 { display: flex; gap: 8px; margin-top: 8px; }
+  .modal .row2 .btn { flex: 1; }
+  pre.creds { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; white-space: pre-wrap; font-family: inherit; font-size: 16px; }
+
+  .lightbox { position: fixed; inset: 0; background: #EDEDED; z-index: 30; overflow: auto; }
+  .lightbox img { width: 100%; height: auto; display: block; }
+  .lightbox button { position: fixed; top: max(12px, env(safe-area-inset-top)); right: 12px; width: 48px; height: 48px; border-radius: 50%;
+    border: 2px solid var(--primary); background: #fff; color: var(--primary); font-size: 22px; font-weight: 700; }
+
+  .toast { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 15px; z-index: 40; max-width: 90%; text-align: center; }
+  .busy { position: fixed; inset: 0; background: rgba(255,255,255,.75); display: flex; align-items: center; justify-content: center; z-index: 50; font-weight: 700; color: var(--primary); font-size: 18px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Prof Polyvalent BAC</h1>
+  <button id="btnLogout" class="hidden">Déconnexion</button>
+</header>
+
+<!-- Connexion -->
+<section id="viewLogin" class="login hidden">
+  <div class="logo">🎓</div>
+  <h2>Espace professeur</h2>
+  <p>Réservé au professeur</p>
+  <input id="loginPw" class="field" type="password" placeholder="Mot de passe professeur" autocomplete="current-password">
+  <button id="btnLogin" class="btn">Se connecter</button>
+  <div id="loginErr" class="msg-error"></div>
+  <button id="btnSetup" class="link">Première configuration (créer le compte professeur)</button>
+</section>
+
+<!-- Application -->
+<section id="viewApp" class="hidden">
+  <nav class="tabs">
+    <button data-tab="TSE" class="active">TSE-FA</button>
+    <button data-tab="TSS">TSS-FA</button>
+    <button data-tab="students">Élèves</button>
+  </nav>
+  <main>
+    <div id="viewGroup">
+      <div class="group-bar">
+        <b id="groupLabel">Les élèves peuvent écrire</b>
+        <label class="switch"><input type="checkbox" id="canPost"><span></span></label>
+      </div>
+      <div id="feed" class="feed"></div>
+    </div>
+
+    <div id="viewStudents" class="students hidden">
+      <button id="btnAdd" class="btn">+ Ajouter un élève</button>
+      <div id="count" class="count"></div>
+      <div class="filter">
+        <button data-f="all" class="active">Tous</button>
+        <button data-f="TSE">TSE-FA</button>
+        <button data-f="TSS">TSS-FA</button>
+      </div>
+      <div id="studentList"></div>
+    </div>
+  </main>
+
+  <div id="composer" class="composer">
+    <div id="preview" class="preview hidden">
+      <img id="previewImg" alt="">
+      <span>Photo prête. Ajoutez un texte si vous voulez, puis envoyez.</span>
+      <button id="btnRemovePhoto">✕</button>
+    </div>
+    <div class="row">
+      <button id="btnPhoto" class="icon-btn light" title="Photo">📷</button>
+      <textarea id="text" rows="1" placeholder="Écrire un message…"></textarea>
+      <button id="btnSend" class="icon-btn" title="Envoyer">➤</button>
+    </div>
+    <input id="fileInput" type="file" accept="image/*" class="hidden">
+  </div>
+</section>
+
+<div id="modalRoot"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  const CONFIG = {
+    apiKey: "AIzaSyDGBAUpCPP8zLwx6aq4j30rHMxJSpAuTpo",
+    authDomain: "prof-polyvalent-bac.firebaseapp.com",
+    projectId: "prof-polyvalent-bac",
+    appId: "1:975283196046:android:b36a6c8ccc4af604ff39df"
+  };
+  const DOMAIN = "ppbac.app";
+  const ADMIN_EMAIL = "admin@" + DOMAIN;
+  const GROUPS = { TSE: "TSE-FA — Sciences expérimentales", TSS: "TSS-FA — Sciences sociales" };
+  const MAX_B64 = 860000; // ≈ 650 Ko : sous la limite de 1 Mo d'un document Firestore
+
+  firebase.initializeApp(CONFIG);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  // Deuxième connexion pour créer les élèves sans déconnecter le professeur
+  const creatorApp = firebase.initializeApp(CONFIG, "creator");
+  const creatorAuth = creatorApp.auth();
+  creatorAuth.setPersistence(firebase.auth.Auth.Persistence.NONE);
+
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  let current = "TSE";
+  let unsubFeed = null, unsubGroup = null, unsubStudents = null;
+  let pendingPhoto = null; // base64
+  let students = [];
+  let studentFilter = "all";
+  const imgCache = {};
+
+  // ---------- Outils ----------
+  function toast(msg) {
+    const t = document.createElement("div");
+    t.className = "toast"; t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3200);
+  }
+  function busy(on, msg) {
+    let b = $("busy");
+    if (on) {
+      if (!b) { b = document.createElement("div"); b.id = "busy"; b.className = "busy"; document.body.appendChild(b); }
+      b.textContent = msg || "Patientez…";
+    } else if (b) b.remove();
+  }
+  function errText(e) {
+    const c = (e && e.code) || "";
+    if (c.includes("network")) return "Pas de connexion Internet.";
+    if (c.includes("email-already-in-use")) return "Cet identifiant existe déjà.";
+    if (c.includes("weak-password")) return "Mot de passe trop court (6 caractères minimum).";
+    if (c.includes("invalid-credential") || c.includes("wrong-password") || c.includes("user-not-found") || c.includes("invalid-login"))
+      return "Mot de passe incorrect.";
+    if (c.includes("too-many-requests")) return "Trop d'essais. Attendez quelques minutes.";
+    if (c.includes("permission-denied")) return "Accès refusé (vérifiez les règles Firestore).";
+    return "Erreur : " + ((e && e.message) || "inconnue");
+  }
+  function modal(html) {
+    const root = $("modalRoot");
+    root.innerHTML = '<div class="modal"><div class="box">' + html + "</div></div>";
+    return root.firstChild;
+  }
+  function closeModal() { $("modalRoot").innerHTML = ""; }
+  function fmtTime(ts) {
+    if (!ts) return "envoi…";
+    const d = ts.toDate();
+    const p = (n) => String(n).padStart(2, "0");
+    return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  function randomPw() { return String(Math.floor(100000 + Math.random() * 900000)); }
+
+  // ---------- Connexion ----------
+  auth.onAuthStateChanged((user) => {
+    if (user && user.email === ADMIN_EMAIL) {
+      $("viewLogin").classList.add("hidden");
+      $("viewApp").classList.remove("hidden");
+      $("btnLogout").classList.remove("hidden");
+      ensureGroups();
+      openTab(current);
+    } else {
+      if (user) auth.signOut();
+      stopAll();
+      $("viewApp").classList.add("hidden");
+      $("btnLogout").classList.add("hidden");
+      $("viewLogin").classList.remove("hidden");
+    }
+  });
+
+  $("btnLogin").onclick = () => {
+    const pw = $("loginPw").value;
+    $("loginErr").textContent = "";
+    if (!pw) { $("loginErr").textContent = "Entrez votre mot de passe."; return; }
+    $("btnLogin").disabled = true;
+    auth.signInWithEmailAndPassword(ADMIN_EMAIL, pw)
+      .catch((e) => { $("loginErr").textContent = errText(e); })
+      .finally(() => { $("btnLogin").disabled = false; });
+  };
+  $("loginPw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnLogin").click(); });
+
+  $("btnSetup").onclick = () => {
+    const m = modal(
+      "<h3>Créer le compte professeur</h3>" +
+      "<p>À faire une seule fois. Choisissez un mot de passe d'au moins 8 caractères et gardez-le secret.</p>" +
+      '<input id="s1" class="field" type="password" placeholder="Mot de passe" autocomplete="new-password">' +
+      '<input id="s2" class="field" type="password" placeholder="Répéter le mot de passe" autocomplete="new-password">' +
+      '<div id="sErr" class="msg-error"></div>' +
+      '<div class="row2"><button id="sNo" class="btn secondary">Annuler</button><button id="sOk" class="btn">Créer</button></div>'
+    );
+    m.querySelector("#sNo").onclick = closeModal;
+    m.querySelector("#sOk").onclick = () => {
+      const a = m.querySelector("#s1").value, b = m.querySelector("#s2").value;
+      const err = m.querySelector("#sErr");
+      if (a.length < 8) { err.textContent = "Au moins 8 caractères."; return; }
+      if (a !== b) { err.textContent = "Les deux mots de passe sont différents."; return; }
+      auth.createUserWithEmailAndPassword(ADMIN_EMAIL, a)
+        .then(() => { closeModal(); toast("Compte professeur créé ✅"); })
+        .catch((e) => {
+          err.textContent = (e.code || "").includes("email-already-in-use")
+            ? "Le compte professeur existe déjà. Connectez-vous avec votre mot de passe."
+            : errText(e);
+        });
+    };
+  };
+
+  $("btnLogout").onclick = () => { if (confirm("Se déconnecter ?")) auth.signOut(); };
+
+  function ensureGroups() {
+    const batch = db.batch();
+    Object.keys(GROUPS).forEach((g) => batch.set(db.collection("groups").doc(g), { name: GROUPS[g] }, { merge: true }));
+    batch.commit().catch(() => {});
+  }
+  function stopAll() {
+    [unsubFeed, unsubGroup, unsubStudents].forEach((u) => u && u());
+    unsubFeed = unsubGroup = unsubStudents = null;
+  }
+
+  // ---------- Onglets ----------
+  document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => openTab(b.dataset.tab));
+
+  function openTab(tab) {
+    document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
+    if (unsubFeed) { unsubFeed(); unsubFeed = null; }
+    if (unsubGroup) { unsubGroup(); unsubGroup = null; }
+    if (tab === "students") {
+      $("viewGroup").classList.add("hidden");
+      $("composer").classList.add("hidden");
+      $("viewStudents").classList.remove("hidden");
+      watchStudents();
+      return;
+    }
+    current = tab;
+    $("viewStudents").classList.add("hidden");
+    $("viewGroup").classList.remove("hidden");
+    $("composer").classList.remove("hidden");
+    $("groupLabel").textContent = "Les élèves de " + (tab === "TSE" ? "TSE-FA" : "TSS-FA") + " peuvent écrire";
+    watchGroup(tab);
+    watchFeed(tab);
+  }
+
+  // ---------- Groupe ----------
+  function watchGroup(g) {
+    unsubGroup = db.collection("groups").doc(g).onSnapshot((s) => {
+      $("canPost").checked = !!(s.exists && s.data().studentsCanPost === true);
+    });
+  }
+  $("canPost").onchange = (e) => {
+    const v = e.target.checked;
+    db.collection("groups").doc(current).set({ studentsCanPost: v }, { merge: true })
+      .then(() => toast(v ? "Les élèves peuvent écrire" : "Seul le professeur écrit"))
+      .catch((er) => { toast(errText(er)); e.target.checked = !v; });
+  };
+
+  function watchFeed(g) {
+    const feed = $("feed");
+    feed.innerHTML = '<div class="empty">Chargement…</div>';
+    unsubFeed = db.collection("groups").doc(g).collection("messages")
+      .orderBy("createdAt", "asc").limitToLast(300)
+      .onSnapshot((snap) => {
+        const atBottom = (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 80;
+        if (snap.empty) { feed.innerHTML = '<div class="empty">Aucune publication pour le moment.<br>Envoyez la première photo avec 📷.</div>'; return; }
+        feed.innerHTML = "";
+        snap.docs.forEach((d) => feed.appendChild(renderMsg(g, d.id, d.data())));
+        if (atBottom || feed.dataset.first !== g) { window.scrollTo(0, document.body.scrollHeight); feed.dataset.first = g; }
+      }, (e) => { feed.innerHTML = '<div class="empty">' + esc(errText(e)) + "</div>"; });
+  }
+
+  function renderMsg(g, id, m) {
+    const el = document.createElement("div");
+    el.className = "bubble" + (m.isAdmin ? "" : " student");
+    el.innerHTML =
+      '<div class="who"><span>' + esc(m.isAdmin ? "Prof Polyvalent" : m.senderName) + "</span>" +
+      '<button data-del>Supprimer</button></div>' +
+      (m.hasImage ? '<div class="photo">Chargement de la photo…</div>' : "") +
+      (m.text ? '<div class="txt">' + esc(m.text) + "</div>" : "") +
+      '<div class="time">' + fmtTime(m.createdAt) + "</div>";
+    el.querySelector("[data-del]").onclick = () => {
+      if (!confirm("Supprimer ce message pour tout le monde ?")) return;
+      const ref = db.collection("groups").doc(g);
+      const b = db.batch();
+      b.delete(ref.collection("messages").doc(id));
+      if (m.hasImage) b.delete(ref.collection("images").doc(id));
+      b.commit().then(() => toast("Message supprimé")).catch((e) => toast(errText(e)));
+    };
+    if (m.hasImage) {
+      const box = el.querySelector(".photo");
+      const show = (src) => {
+        box.innerHTML = "";
+        const img = document.createElement("img");
+        img.src = src; img.alt = "Photo";
+        img.onclick = () => openLightbox(src);
+        box.appendChild(img);
+      };
+      if (imgCache[id]) show(imgCache[id]);
+      else db.collection("groups").doc(g).collection("images").doc(id).get()
+        .then((s) => {
+          if (!s.exists) { box.textContent = "Photo supprimée."; return; }
+          imgCache[id] = "data:image/jpeg;base64," + s.data().data;
+          show(imgCache[id]);
+        })
+        .catch(() => { box.textContent = "Photo indisponible."; });
+    }
+    return el;
+  }
+
+  function openLightbox(src) {
+    const lb = document.createElement("div");
+    lb.className = "lightbox";
+    lb.innerHTML = '<img alt=""><button>✕</button>';
+    lb.querySelector("img").src = src;
+    lb.querySelector("button").onclick = () => lb.remove();
+    document.body.appendChild(lb);
+  }
+
+  // ---------- Envoi ----------
+  const ta = $("text");
+  ta.addEventListener("input", () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight, 140) + "px"; });
+
+  $("btnPhoto").onclick = () => $("fileInput").click();
+  $("fileInput").onchange = async (e) => {
+    const f = e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    busy(true, "Préparation de la photo…");
+    try {
+      pendingPhoto = await compress(f);
+      $("previewImg").src = "data:image/jpeg;base64," + pendingPhoto;
+      $("preview").classList.remove("hidden");
+    } catch (er) {
+      toast("Impossible de lire cette photo.");
+    } finally { busy(false); }
+  };
+  $("btnRemovePhoto").onclick = () => { pendingPhoto = null; $("preview").classList.add("hidden"); };
+
+  function loadImage(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { resolve(img); URL.revokeObjectURL(url); };
+      img.onerror = reject;
+      img.src = url;
+    });
+  }
+  async function compress(file) {
+    const img = await loadImage(file);
+    let maxSide = 1600, q = 0.8;
+    for (;;) {
+      const r = Math.min(1, maxSide / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * r);
+      c.height = Math.round(img.naturalHeight * r);
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      const b64 = c.toDataURL("image/jpeg", q).split(",")[1];
+      if (b64.length <= MAX_B64 || (q <= 0.45 && maxSide <= 900)) return b64;
+      if (q > 0.55) q -= 0.1; else maxSide = Math.round(maxSide * 0.8);
+    }
+  }
+
+  $("btnSend").onclick = () => {
+    const text = ta.value.trim();
+    if (!text && !pendingPhoto) return;
+    const ref = db.collection("groups").doc(current);
+    const msgRef = ref.collection("messages").doc();
+    const data = {
+      senderUid: auth.currentUser.uid,
+      senderName: "Prof Polyvalent",
+      isAdmin: true,
+      text: text,
+      hasImage: !!pendingPhoto,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    const b = db.batch();
+    if (pendingPhoto) b.set(ref.collection("images").doc(msgRef.id), { data: pendingPhoto });
+    b.set(msgRef, data);
+    if (pendingPhoto) imgCache[msgRef.id] = "data:image/jpeg;base64," + pendingPhoto;
+    busy(true, pendingPhoto ? "Envoi de la photo…" : "Envoi…");
+    b.commit()
+      .then(() => {
+        ta.value = ""; ta.style.height = "auto";
+        pendingPhoto = null; $("preview").classList.add("hidden");
+        window.scrollTo(0, document.body.scrollHeight);
+      })
+      .catch((e) => toast("Non envoyé : " + errText(e)))
+      .finally(() => busy(false));
+  };
+
+  // ---------- Élèves ----------
+  document.querySelectorAll(".filter button").forEach((b) => b.onclick = () => {
+    studentFilter = b.dataset.f;
+    document.querySelectorAll(".filter button").forEach((x) => x.classList.toggle("active", x === b));
+    renderStudents();
+  });
+
+  function watchStudents() {
+    if (unsubStudents) return;
+    unsubStudents = db.collection("users").where("role", "==", "student").onSnapshot((snap) => {
+      students = snap.docs.map((d) => Object.assign({ uid: d.id }, d.data()));
+      students.sort((a, b) => (a.group || "").localeCompare(b.group || "") || (a.name || "").localeCompare(b.name || ""));
+      renderStudents();
+    }, (e) => { $("studentList").innerHTML = '<div class="empty">' + esc(errText(e)) + "</div>"; });
+  }
+
+  function renderStudents() {
+    const tse = students.filter((s) => s.group === "TSE" && s.active).length;
+    const tss = students.filter((s) => s.group === "TSS" && s.active).length;
+    $("count").textContent = "Actifs : " + tse + " en TSE-FA • " + tss + " en TSS-FA";
+    const list = $("studentList");
+    const shown = students.filter((s) => studentFilter === "all" || s.group === studentFilter);
+    if (!shown.length) { list.innerHTML = '<div class="empty">Aucun élève pour le moment.</div>'; return; }
+    list.innerHTML = "";
+    shown.forEach((s) => {
+      const hasDevice = !!s.deviceId;
+      const c = document.createElement("div");
+      c.className = "card";
+      c.innerHTML =
+        '<div class="name">' + esc(s.name) + "</div>" +
+        '<div class="info">' + esc([s.group === "TSS" ? "TSS-FA" : "TSE-FA", s.username, s.phone].filter(Boolean).join(" • ")) + "</div>" +
+        '<div class="status" style="color:' + (s.active ? "var(--ok)" : "var(--danger)") + '">' +
+          (s.active ? (hasDevice ? "Actif — téléphone lié" : "Actif — pas encore connecté") : "Bloqué") + "</div>" +
+        '<div class="actions">' +
+          (s.active ? '<button class="red" data-a="block">Bloquer</button>' : '<button class="green" data-a="unblock">Débloquer</button>') +
+          (hasDevice ? '<button data-a="unlink">Délier le téléphone</button>' : "") +
+          '<button data-a="group">Passer en ' + (s.group === "TSE" ? "TSS-FA" : "TSE-FA") + "</button>" +
+        "</div>";
+      c.querySelectorAll("[data-a]").forEach((btn) => btn.onclick = () => studentAction(s, btn.dataset.a));
+      list.appendChild(c);
+    });
+  }
+
+  function studentAction(s, a) {
+    const ref = db.collection("users").doc(s.uid);
+    let upd, msg;
+    if (a === "block") {
+      if (!confirm("Bloquer " + s.name + " ? Il sera déconnecté immédiatement.")) return;
+      upd = { active: false }; msg = s.name + " est bloqué.";
+    } else if (a === "unblock") {
+      upd = { active: true }; msg = s.name + " est débloqué.";
+    } else if (a === "unlink") {
+      if (!confirm("Délier le téléphone de " + s.name + " ? Il pourra se connecter sur un nouveau téléphone.")) return;
+      upd = { deviceId: null }; msg = "Téléphone délié.";
+    } else {
+      const other = s.group === "TSE" ? "TSS" : "TSE";
+      if (!confirm("Passer " + s.name + " dans " + GROUPS[other] + " ?")) return;
+      upd = { group: other }; msg = s.name + " est maintenant en " + (other === "TSE" ? "TSE-FA" : "TSS-FA") + ".";
+    }
+    ref.update(upd).then(() => toast(msg)).catch((e) => toast(errText(e)));
+  }
+
+  $("btnAdd").onclick = () => {
+    const m = modal(
+      "<h3>Nouvel élève</h3>" +
+      '<input id="aName" class="field" placeholder="Nom complet de l\'élève" autocapitalize="words">' +
+      '<input id="aPhone" class="field" type="tel" placeholder="Numéro de téléphone">' +
+      '<input id="aUser" class="field" placeholder="Identifiant (ex : fanta.kankan)" autocapitalize="none" autocorrect="off">' +
+      '<input id="aPw" class="field" placeholder="Mot de passe" value="' + randomPw() + '" autocapitalize="none">' +
+      "<b>Groupe :</b>" +
+      '<label class="radio"><input type="radio" name="aGroup" value="TSE" checked> TSE-FA — Sciences expérimentales</label>' +
+      '<label class="radio"><input type="radio" name="aGroup" value="TSS"> TSS-FA — Sciences sociales</label>' +
+      '<div id="aErr" class="msg-error"></div>' +
+      '<div class="row2"><button id="aNo" class="btn secondary">Annuler</button><button id="aOk" class="btn">Créer</button></div>'
+    );
+    m.querySelector("#aNo").onclick = closeModal;
+    m.querySelector("#aOk").onclick = async () => {
+      const name = m.querySelector("#aName").value.trim();
+      const phone = m.querySelector("#aPhone").value.trim();
+      const username = m.querySelector("#aUser").value.trim().toLowerCase().replace(/\s+/g, "");
+      const pw = m.querySelector("#aPw").value.trim();
+      const group = m.querySelector('input[name="aGroup"]:checked').value;
+      const err = m.querySelector("#aErr");
+      if (!name) { err.textContent = "Le nom est obligatoire."; return; }
+      if (!/^[a-z0-9._-]{3,30}$/.test(username)) { err.textContent = "Identifiant : 3 à 30 caractères (lettres, chiffres, point, tiret), sans accent ni espace."; return; }
+      if (username === "admin") { err.textContent = "Identifiant réservé."; return; }
+      if (pw.length < 6) { err.textContent = "Mot de passe : 6 caractères minimum."; return; }
+      const ok = m.querySelector("#aOk");
+      ok.disabled = true; ok.textContent = "Création…";
+      try {
+        const cred = await creatorAuth.createUserWithEmailAndPassword(username + "@" + DOMAIN, pw);
+        const uid = cred.user.uid;
+        await creatorAuth.signOut();
+        await db.collection("users").doc(uid).set({
+          name, phone, username, group, role: "student", active: true, deviceId: null,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showCreds(name, username, pw, group);
+      } catch (e) {
+        err.textContent = errText(e);
+        ok.disabled = false; ok.textContent = "Créer";
+      }
+    };
+  };
+
+  function showCreds(name, username, pw, group) {
+    const text = "Prof Polyvalent BAC\n" +
+      "Élève : " + name + " (" + GROUPS[group] + ")\n" +
+      "Identifiant : " + username + "\n" +
+      "Mot de passe : " + pw + "\n" +
+      "⚠️ Votre compte ne fonctionne que sur un seul téléphone.";
+    const m = modal(
+      "<h3>Élève créé ✅</h3><p>Envoyez ces informations à l'élève avec l'application :</p>" +
+      '<pre class="creds">' + esc(text) + "</pre>" +
+      '<div class="row2"><button id="cClose" class="btn secondary">Fermer</button><button id="cCopy" class="btn">Copier</button></div>'
+    );
+    m.querySelector("#cClose").onclick = closeModal;
+    m.querySelector("#cCopy").onclick = () => {
+      const done = () => toast("Copié. Collez-le dans WhatsApp.");
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      else fallbackCopy(text, done);
+    };
+  }
+  function fallbackCopy(text, done) {
+    const t = document.createElement("textarea");
+    t.value = text; document.body.appendChild(t); t.select();
+    try { document.execCommand("copy"); done(); } catch (e) { toast("Copie impossible, recopiez à la main."); }
+    t.remove();
+  }
+})();
+</script>
+</body>
+</html>
