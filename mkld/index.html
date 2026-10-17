@@ -90,6 +90,10 @@
   .row2 .btn { flex: 1; }
   pre.creds { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; white-space: pre-wrap; font-family: inherit; }
   .ver { border: 1px solid var(--line); border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+  .diff { font-family: "Noto Sans NKo", sans-serif; direction: rtl; text-align: right; white-space: pre-wrap; line-height: 2.1; font-size: 20px;
+    border: 1px solid var(--line); border-radius: 10px; padding: 12px; background: #fff; max-height: 60vh; overflow: auto; }
+  del { background: #FDE2E2; color: #B71C1C; text-decoration: line-through; text-decoration-thickness: 2px; }
+  ins { background: #DDF3E2; color: #1B5E20; text-decoration: none; font-weight: 700; }
   .ver .pv { font-family: "Noto Sans NKo", sans-serif; direction: rtl; color: var(--soft); max-height: 4.2em; overflow: hidden; margin: 4px 0; }
   .toast { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 15px; z-index: 40; max-width: 90%; text-align: center; }
   .net { position: fixed; top: 0; left: 0; right: 0; background: var(--orange); color: #fff; text-align: center; font-size: 13px; padding: 4px; z-index: 50; }
@@ -154,6 +158,7 @@
       <button id="fMinus" aria-label="Texte plus petit">A−</button>
       <button id="fPlus" aria-label="Texte plus grand">A+</button>
       <button id="btnVersions">Versions</button>
+      <button id="btnCorrections">Corrections</button>
       <span id="saveState" class="save ok"></span>
     </div>
     <textarea id="editor" dir="rtl" lang="nqo" spellcheck="false" placeholder="ߛߓߍߟߌ ߘߊߡߌ߬ߘߊ߫ ߦߊ߲߬…"></textarea>
@@ -545,6 +550,7 @@
   async function openEditor(chId) {
     stopViews();
     chapter = { id: chId };
+    snapTaken = false;
     setView("edit", book.title);
     ed.value = ""; lastSaved = ""; canEdit = false; ed.readOnly = true;
     setSave("wait", "Chargement…");
@@ -616,8 +622,14 @@
     return chRef().update({ lockUid: null, lockName: null, lockAt: null }).catch(() => {});
   }
 
+  let snapTaken = false;
   ed.addEventListener("input", () => {
     if (!canEdit) return;
+    // Avant la toute première modification, garder une copie du texte tel qu'il était
+    if (!snapTaken) {
+      snapTaken = true;
+      if (openedText.trim()) saveVersion(openedText, false);
+    }
     countWords();
     setSave("wait", "Modifications…");
     try { localStorage.setItem(draftKey(), JSON.stringify({ text: ed.value, at: Date.now() })); } catch (e) {}
@@ -701,6 +713,97 @@
         vl.appendChild(el);
       });
     } catch (e) { m.querySelector("#vList").textContent = errText(e); }
+  };
+
+  // ---------- Corrections (comparaison de versions) ----------
+  function lcsOps(a, b) {
+    // Opérations minimales entre deux listes : "=" identique, "-" retiré, "+" ajouté
+    const n = a.length, m = b.length;
+    let s = 0;
+    while (s < n && s < m && a[s] === b[s]) s++;
+    let e = 0;
+    while (e < n - s && e < m - s && a[n - 1 - e] === b[m - 1 - e]) e++;
+    const A = a.slice(s, n - e), B = b.slice(s, m - e);
+    const ops = [];
+    for (let i = 0; i < s; i++) ops.push(["=", a[i]]);
+    const N = A.length, M = B.length;
+    if (N * M > 4000000) {
+      A.forEach((x) => ops.push(["-", x]));
+      B.forEach((x) => ops.push(["+", x]));
+    } else {
+      const W = M + 1, L = new Int32Array((N + 1) * W);
+      for (let i = N - 1; i >= 0; i--)
+        for (let j = M - 1; j >= 0; j--)
+          L[i * W + j] = A[i] === B[j] ? L[(i + 1) * W + j + 1] + 1 : Math.max(L[(i + 1) * W + j], L[i * W + j + 1]);
+      let i = 0, j = 0;
+      while (i < N && j < M) {
+        if (A[i] === B[j]) { ops.push(["=", A[i]]); i++; j++; }
+        else if (L[(i + 1) * W + j] >= L[i * W + j + 1]) { ops.push(["-", A[i]]); i++; }
+        else { ops.push(["+", B[j]]); j++; }
+      }
+      while (i < N) ops.push(["-", A[i++]]);
+      while (j < M) ops.push(["+", B[j++]]);
+    }
+    for (let i = n - e; i < n; i++) ops.push(["=", a[i]]);
+    return ops;
+  }
+  const words = (t) => t.split(/(\s+)/).filter((x) => x !== "");
+  function diffHtml(oldT, newT) {
+    // 1) par paragraphes, 2) mot à mot dans les paragraphes modifiés
+    const P = lcsOps(oldT.split("\n"), newT.split("\n"));
+    let html = "", del = 0, ins = 0;
+    const flushPair = (olds, news) => {
+      const ops = lcsOps(words(olds.join("\n")), words(news.join("\n")));
+      ops.forEach(([k, w]) => {
+        const isWord = /\S/.test(w);
+        if (k === "=") html += esc(w);
+        else if (k === "-") { html += '<del>' + esc(w) + "</del>"; if (isWord) del++; }
+        else { html += '<ins>' + esc(w) + "</ins>"; if (isWord) ins++; }
+      });
+      html += "\n";
+    };
+    let olds = [], news = [];
+    const flush = () => { if (olds.length || news.length) flushPair(olds, news); olds = []; news = []; };
+    P.forEach(([k, line]) => {
+      if (k === "=") { flush(); html += esc(line) + "\n"; }
+      else if (k === "-") olds.push(line);
+      else news.push(line);
+    });
+    flush();
+    return { html, del, ins };
+  }
+  $("btnCorrections").onclick = async () => {
+    const m = modal("<h3>Voir les corrections</h3>" +
+      "<p class='muted'>Comparer le texte actuel avec une version précédente.<br>" +
+      "<del>barré rouge</del> = retiré • <ins>vert</ins> = ajouté</p>" +
+      '<select id="cVer" class="field"><option>Chargement…</option></select>' +
+      '<div id="cStats" class="muted" style="margin-bottom:6px"></div>' +
+      '<div id="cOut" class="diff"></div>' +
+      '<button id="cClose" class="btn secondary" style="margin-top:10px">Fermer</button>');
+    m.querySelector(".box").style.maxWidth = "760px";
+    m.querySelector("#cClose").onclick = closeModal;
+    try {
+      const snap = await chRef().collection("versions").orderBy("at", "asc").get();
+      const sel = m.querySelector("#cVer");
+      if (snap.empty) {
+        sel.outerHTML = "";
+        m.querySelector("#cOut").innerHTML = '<div class="empty">Pas encore de version à comparer. Une version est gardée quand on quitte le chapitre après l\'avoir modifié.</div>';
+        return;
+      }
+      const vers = snap.docs.map((d) => d.data());
+      sel.innerHTML = vers.map((v, i) =>
+        '<option value="' + i + '">' + (i === 0 ? "Texte d'origine — " : "") + fmt(v.at) + " — " + esc(v.by) + "</option>").join("");
+      const show = () => {
+        const v = vers[+sel.value];
+        const r = diffHtml(v.text || "", ed.value);
+        m.querySelector("#cStats").textContent = (r.del || r.ins)
+          ? r.del + " mot(s) retiré(s) • " + r.ins + " mot(s) ajouté(s)"
+          : "Aucune différence avec le texte actuel.";
+        m.querySelector("#cOut").innerHTML = r.html;
+      };
+      sel.onchange = show;
+      show();
+    } catch (e) { m.querySelector("#cOut").textContent = errText(e); }
   };
 
   // Commentaires
