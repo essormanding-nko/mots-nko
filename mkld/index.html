@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="nqo" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -21,7 +21,9 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 17px; }
+    font-family: "Noto Sans NKo", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; font-size: 18px; }
+  .ltr { direction: ltr; text-align: left; }
+  .fr { font-size: 12px; color: var(--soft); display: block; direction: ltr; }
   button, input, select, textarea { font: inherit; color: var(--text); }
   button { cursor: pointer; }
   .hidden { display: none !important; }
@@ -75,7 +77,7 @@
     line-height: 2; background: #fff; font-family: "Noto Sans NKo", sans-serif; }
   #editor:focus { outline: none; border-color: var(--green); }
   #editor[readonly] { background: #F7F7F7; }
-  .count { text-align: left; font-size: 13px; color: var(--soft); margin-top: 4px; }
+  .count { text-align: right; font-size: 13px; color: var(--soft); margin-top: 4px; }
 
   .comments h3 { color: var(--green); margin: 22px 0 8px; font-size: 18px; }
   .cmt { background: #FFFBEA; border: 1px solid #EAD9A0; border-radius: 10px; padding: 10px; margin-bottom: 8px; }
@@ -96,29 +98,33 @@
   ins { background: #DDF3E2; color: #1B5E20; text-decoration: none; font-weight: 700; }
   .ver .pv { font-family: "Noto Sans NKo", sans-serif; direction: rtl; color: var(--soft); max-height: 4.2em; overflow: hidden; margin: 4px 0; }
   .toast { position: fixed; left: 50%; bottom: 40px; transform: translateX(-50%); background: #222; color: #fff; padding: 10px 16px; border-radius: 20px; font-size: 15px; z-index: 40; max-width: 90%; text-align: center; }
+  .card.pending { border: 2px dashed var(--danger); background: #FFF5F5; }
+  .card.pending .name { color: #8A1C1C; text-decoration: line-through; }
+  .pend { background: #FDE2E2; color: #8A1C1C; border-radius: 8px; padding: 6px 8px; font-weight: 700; font-size: 14px; margin-top: 6px; }
+  .actions button.ok { border-color: var(--ok); color: #fff; background: var(--ok); }
   .net { position: fixed; top: 0; left: 0; right: 0; background: var(--orange); color: #fff; text-align: center; font-size: 13px; padding: 4px; z-index: 50; }
 </style>
 </head>
 <body>
 
-<div id="netBar" class="net hidden">Hors ligne — votre texte est gardé et partira dès le retour d'Internet</div>
+<div id="netBar" class="net hidden">ߜߊ߲߬ߞߎ߲߬ߓߊߟߌ: ߛߓߍߟߌ ߘߌ߫ ߕߊ߯ ߣߌ߫ ߓߟߐߟߐ ߞߐߛߊ߬ߦߌ߬ ߘߊ߫.</div>
 
 <header>
   <button id="btnBack" class="hidden">←</button>
   <img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:none">
   <h1 id="hTitle" class="nko">ߡߺߞߺߟߺߘ</h1>
   <button id="btnMembers" class="hidden">Comptes</button>
-  <button id="btnLogout" class="hidden">Sortir</button>
+  <button id="btnLogout" class="hidden">ߓߐ߫</button>
 </header>
 
 <!-- Connexion -->
 <section id="vLogin" class="login hidden">
   <img src="logo.jpg" alt="Logo" style="width:170px;height:170px;border-radius:50%;display:block;margin:0 auto 10px">
   <h2 class="nko" style="font-size:34px">ߡߺߞߺߟߺߘ</h2>
-  <p>Union pour le Développement des Langues Mandingues<br>Espace privé des auteurs</p>
-  <input id="lUser" class="field" placeholder="Identifiant" autocapitalize="none" autocorrect="off">
-  <input id="lPw" class="field" type="password" placeholder="Mot de passe" autocomplete="current-password">
-  <button id="btnLogin" class="btn">Se connecter</button>
+  <p>ߦߙߐ ߣߌ߲߬ ߦߋ߫ ߛߓߍߦߟߊ ߟߎ߬ ߟߋ߬ ߘߐ߬ߙߐ߲߫ ߕߊ߫ ߘߌ߫<span class="fr">Union pour le Développement des Langues Mandingues</span></p>
+  <input id="lUser" class="field" placeholder="ߌ ߕߐ߮" autocapitalize="none" autocorrect="off">
+  <input id="lPw" class="field" type="password" placeholder="ߕߊ߬ߡߌ߲߬ߞߎߡߊ" autocomplete="current-password">
+  <button id="btnLogin" class="btn">ߜߊ߲߬ߞߎ߲߬ߠߌ߲</button>
   <div id="lErr" class="err"></div>
   <button id="btnSetup" class="link">Première configuration (propriétaire)</button>
 </section>
@@ -127,8 +133,8 @@
   <!-- Livres -->
   <section id="vBooks">
     <div class="row" style="justify-content:space-between">
-      <div class="title">Nos livres</div>
-      <button id="btnNewBook" class="btn small">+ Nouveau livre</button>
+      <div class="title">ߊ߲ ߠߊ߫ ߞߊ߬ߝߊ ߟߎ߬</div>
+      <button id="btnNewBook" class="btn small">+ ߞߊ߬ߝߊ߫ ߞߎߘߊ</button>
     </div>
     <div id="bookList"></div>
   </section>
@@ -137,43 +143,43 @@
   <section id="vBook" class="hidden">
     <div id="bookHead"></div>
     <div class="row" style="margin:6px 0 12px">
-      <button id="btnNewCh" class="btn small">+ Ajouter une partie</button>
-      <button id="btnExport" class="btn small secondary">Exporter le livre</button>
+      <button id="btnNewCh" class="btn small">+ ߞߎߘߎ߲ ߘߏ߫ ߝߙߴߊ߬ ߞߊ߲߫</button>
+      <button id="btnExport" class="btn small secondary">ߞߊ߬ߝߊ ߟߊߓߐ߫</button>
     </div>
     <div id="chList"></div>
   </section>
 
   <!-- Éditeur -->
   <section id="vEdit" class="hidden">
-    <input id="chTitle" class="field" placeholder="Titre de la partie">
+    <input id="chTitle" class="field" placeholder="ߞߎߘߎ߲ ߕߐ߮">
     <div id="lockMsg" class="lockmsg hidden"></div>
     <div class="edbar">
       <select id="chKind"></select>
       <select id="chStatus">
-        <option value="todo">À écrire</option>
-        <option value="doing">En cours</option>
-        <option value="review">À relire</option>
-        <option value="done">Terminé</option>
+        <option value="todo">ߛߓߍ߬ߕߊ</option>
+        <option value="doing">ߊ߬ ߦߋ߫ ߛߋ߲߬ߠߊ߫</option>
+        <option value="review">ߘߐ߬ߞߙߊ߲߬ߕߊ</option>
+        <option value="done">ߊ߬ ߓߘߊ߫ ߓߊ߲߫</option>
       </select>
       <button id="fMinus" aria-label="Texte plus petit">A−</button>
       <button id="fPlus" aria-label="Texte plus grand">A+</button>
-      <button id="btnVersions">Versions</button>
-      <button id="btnCorrections">Corrections</button>
+      <button id="btnVersions">ߓߐߢߐ߲߯ߡߊ ߟߎ߬</button>
+      <button id="btnCorrections">ߛߊߞߍߟߌ</button>
       <span id="saveState" class="save ok"></span>
     </div>
     <textarea id="editor" dir="rtl" lang="nqo" spellcheck="false" placeholder="ߛߓߍߟߌ ߘߊߡߌ߬ߘߊ߫ ߦߊ߲߬…"></textarea>
     <div id="wordCount" class="count"></div>
 
     <div class="comments">
-      <h3>Commentaires</h3>
+      <h3>ߞߊ߲߬ߞߎߡߊ ߟߎ߬</h3>
       <div id="cmtList"></div>
-      <textarea id="cmtText" class="field" rows="2" placeholder="Laisser une remarque sur ce chapitre…"></textarea>
-      <button id="btnCmt" class="btn small">Ajouter le commentaire</button>
+      <textarea id="cmtText" class="field" rows="2" placeholder="ߞߊ߲߬ߞߎߡߊ ߘߏ߫ ߕߏ߫ ߛߌ߰ߘߊ ߣߌ߲߬ ߞߊ߲߬…"></textarea>
+      <button id="btnCmt" class="btn small">ߞߊ߲߬ߞߎߡߊ ߝߊ߬ߙߴߊ߬ ߞߊ߲߫</button>
     </div>
   </section>
 
   <!-- Comptes -->
-  <section id="vMembers" class="hidden">
+  <section id="vMembers" class="hidden ltr" dir="ltr">
     <div class="row" style="justify-content:space-between">
       <div class="title">Comptes des auteurs</div>
       <button id="btnAddMember" class="btn small">+ Ajouter</button>
@@ -202,14 +208,27 @@
   const OWNER_EMAIL = "proprio@" + DOMAIN;
   const LOCK_MS = 2 * 60 * 1000;          // un verrou sans signe de vie depuis 2 min est libéré
   const VERSION_EVERY_MS = 10 * 60 * 1000; // une version de sauvegarde toutes les 10 min d'écriture
-  const STATUS = { todo: "À écrire", doing: "En cours", review: "À relire", done: "Terminé" };
-  const KINDS = { preface: "Préface", intro: "Introduction", chapter: "Chapitre", conclusion: "Conclusion", annex: "Annexe" };
+  const STATUS = { todo: "ߛߓߍ߬ߕߊ", doing: "ߊ߬ ߦߋ߫ ߛߋ߲߬ߠߊ߫", review: "ߘߐ߬ߞߙߊ߲߬ߕߊ", done: "ߊ߬ ߓߘߊ߫ ߓߊ߲߫" };
+  const KINDS = { preface: "ߢߍߛߓߍ", intro: "ߢߍߞߎߡߊ", chapter: "ߛߌ߰ߘߊ", conclusion: "ߞߎ߲߬ߘߏ߲", annex: "ߟߊ߬ߝߊߙߊ߲" };
+  // Mots de l'interface en N'Ko (traduits par l'équipe)
+  const T = {
+    badLogin: "ߕߐ߮ ߥߟߊ߫ ߕߊ߬ߡߌ߲߬ߞߎߡߊ ߡߊ߫ ߓߍ߲߬", newBook: "ߞߊ߬ߝߊ߫ ߞߎߘߊ", bookTitle: "ߞߊ߬ߝߊ ߞߎ߲߬ߕߐ߮",
+    noBooks: "ߞߊ߬ߝߊ߫ ߛߌ߫ ߕߍ߫ ߦߊ߲߬ ߕߋ߲߬.", rename: "ߞߊ߬ߝߊ ߕߐ߮ ߡߊߦߟߍ߬ߡߊ߲߫", newPart: "ߞߎߘߎ߲߫ ߞߎߘߊ",
+    partTitle: "ߞߎߘߎ߲ ߕߐ߮", open: "ߊ߬ ߘߊߦߟߍ߬", words: "ߞߎߡߊߘߋ߲߫", readOnly: "ߞߊ߬ߙߊ߲߬ ߜߊ߲߰ߛߊ߲", take: "ߊ߬ ߕߊ߬",
+    versions: "ߓߐߢߐ߲߯ߡߊ ߟߎ߬", backTo: "ߌ ߞߐߛߊ߬ߦߌ߲߬ ߣߌ߲߬ ߡߊ߬", corrections: "ߛߊߞߍߟߌ", removed: "ߞߊ߬ ߓߐ߫ ߊ߬ ߘߐ߫",
+    added: "ߞߊ߬ ߝߊ߬ߙߴߊ߬ ߞߊ߲߫", original: "ߛߓߍߟߌ ߓߖߎߟߞߊ", del: "ߊ߬ ߖߏ߰ߛߌ߬", cancel: "ߊ߬ ߟߊߛߙߋߦߊ߫",
+    ok: "ߊ߬ ߘߐߛߊ߬", close: "ߊ߬ ߘߊߕߎ߲߯", create: "ߊ߬ ߛߌ߲ߘߌ߫", noNet: "ߓߟߐߟߐ߫ ߕߍ߫ ߦߋ߲߬.",
+    modified: (d, n) => "ߊ߬ ߡߊߦߟߍ߬ߡߊ߲߬ ߠߊ߫ " + d + (n ? " ߸ " + n + " ߓߟߏ߫" : ""),
+    writing: (n) => n + " ߦߋ߫ ߛߌ߰ߘߊ ߣߌ߲߬ ߛߓߍ ߞߊ߲߬ ߕߊ߲߬."
+  };
+  // Chiffres N'Ko : 0123456789 → ߀߁߂߃߄߅߆߇߈߉
+  const nk = (x) => String(x).replace(/[0-9]/g, (d) => String.fromCharCode(0x07C0 + +d));
   function partLabel(list, i) {
     const k = list[i].kind || "chapter";
     if (k !== "chapter") return KINDS[k];
     let n = 0;
     for (let j = 0; j <= i; j++) if ((list[j].kind || "chapter") === "chapter") n++;
-    return "Chapitre " + n;
+    return KINDS.chapter + " " + nk(n);
   }
   function kindOptions(sel) {
     return Object.keys(KINDS).map((k) => '<option value="' + k + '"' + (k === sel ? " selected" : "") + ">" + KINDS[k] + "</option>").join("");
@@ -253,11 +272,11 @@
   }
   function errText(e) {
     const c = (e && e.code) || "";
-    if (c.includes("network") || c.includes("unavailable")) return "Pas de connexion Internet.";
+    if (c.includes("network") || c.includes("unavailable")) return T.noNet;
     if (c.includes("email-already-in-use")) return "Cet identifiant existe déjà.";
     if (c.includes("weak-password")) return "Mot de passe trop court (6 caractères minimum).";
     if (c.includes("invalid-credential") || c.includes("wrong-password") || c.includes("user-not-found") || c.includes("invalid-login") || c.includes("invalid-email"))
-      return "Identifiant ou mot de passe incorrect.";
+      return T.badLogin;
     if (c.includes("too-many-requests")) return "Trop d'essais. Attendez quelques minutes.";
     if (c.includes("permission-denied")) return "Accès refusé.";
     return "Erreur : " + ((e && e.message) || "inconnue");
@@ -271,14 +290,14 @@
     if (!ts) return "…";
     const d = ts.toDate ? ts.toDate() : new Date(ts);
     const p = (n) => String(n).padStart(2, "0");
-    return p(d.getDate()) + "/" + p(d.getMonth() + 1) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    return nk(p(d.getDate()) + "/" + p(d.getMonth() + 1) + " " + p(d.getHours()) + ":" + p(d.getMinutes()));
   }
   function emailFor(id) { const t = id.trim().toLowerCase().replace(/\s+/g, ""); return t.includes("@") ? t : t + "@" + DOMAIN; }
   function stopViews() { unsubs.forEach((u) => u()); unsubs = []; }
   function askName(title, value, placeholder, cb) {
     const m = modal("<h3>" + esc(title) + "</h3>" +
       '<input id="mIn" class="field" value="' + esc(value || "") + '" placeholder="' + esc(placeholder || "") + '">' +
-      '<div class="row2"><button id="mNo" class="btn secondary">Annuler</button><button id="mOk" class="btn">Valider</button></div>');
+      '<div class="row2"><button id="mNo" class="btn secondary">' + T.cancel + '</button><button id="mOk" class="btn">' + T.ok + '</button></div>');
     const inp = m.querySelector("#mIn");
     setTimeout(() => inp.focus(), 50);
     m.querySelector("#mNo").onclick = closeModal;
@@ -316,7 +335,7 @@
     }
     unsubMe = db.collection("atelier_members").doc(user.uid).onSnapshot((d) => {
       if (!d.exists || d.data().active !== true) {
-        toast("Accès suspendu. Contactez le propriétaire.");
+        toast("⛔");
         memo.forget();
         auth.signOut();
         return;
@@ -345,7 +364,7 @@
   $("btnLogin").onclick = () => {
     const id = $("lUser").value, pw = $("lPw").value;
     $("lErr").textContent = "";
-    if (!id.trim() || !pw) { $("lErr").textContent = "Entrez votre identifiant et votre mot de passe."; return; }
+    if (!id.trim() || !pw) { $("lErr").textContent = "ߌ ߕߐ߮ + ߕߊ߬ߡߌ߲߬ߞߎߡߊ"; return; }
     $("btnLogin").disabled = true;
     auth.signInWithEmailAndPassword(emailFor(id), pw)
       .then(() => memo.save(id.trim().toLowerCase(), pw))
@@ -355,13 +374,13 @@
   $("lPw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btnLogin").click(); });
 
   $("btnSetup").onclick = () => {
-    const m = modal("<h3>Créer le compte propriétaire</h3>" +
+    const m = modal("<div class='ltr' dir='ltr'><h3>Créer le compte propriétaire</h3>" +
       "<p class='muted'>À faire une seule fois. Votre identifiant sera <b>proprio</b>. Choisissez un mot de passe d'au moins 8 caractères.</p>" +
       '<input id="sName" class="field" placeholder="Votre nom d\'auteur (affiché dans l\'atelier)">' +
       '<input id="s1" class="field" type="password" placeholder="Mot de passe">' +
       '<input id="s2" class="field" type="password" placeholder="Répéter le mot de passe">' +
       '<div id="sErr" class="err"></div>' +
-      '<div class="row2"><button id="sNo" class="btn secondary">Annuler</button><button id="sOk" class="btn">Créer</button></div>');
+      '<div class="row2"><button id="sNo" class="btn secondary">Annuler</button><button id="sOk" class="btn">Créer</button></div></div>');
     m.querySelector("#sNo").onclick = closeModal;
     m.querySelector("#sOk").onclick = async () => {
       const name = m.querySelector("#sName").value.trim() || "Propriétaire";
@@ -381,7 +400,7 @@
   };
 
   $("btnLogout").onclick = () => {
-    if (!confirm("Se déconnecter ? Il faudra retaper l'identifiant et le mot de passe. (Pour simplement quitter, fermez l'application.)")) return;
+    if (!confirm("ߓߐ߫ ؟\n(Se déconnecter ? Il faudra retaper l'identifiant et le mot de passe. Pour simplement quitter, fermez l'application.)")) return;
     memo.forget();
     releaseLock().finally(() => auth.signOut());
   };
@@ -405,24 +424,27 @@
     stopViews();
     setView("books", "ߡߺߞߺߟߺߘ");
     const list = $("bookList");
-    list.innerHTML = '<div class="empty">Chargement…</div>';
+    list.innerHTML = '<div class="empty">…</div>';
     unsubs.push(db.collection("atelier_books").orderBy("createdAt", "asc").onSnapshot((snap) => {
-      if (snap.empty) { list.innerHTML = '<div class="empty">Aucun livre pour l\'instant.<br>Créez le premier avec « + Nouveau livre ».</div>'; return; }
+      if (snap.empty) { list.innerHTML = '<div class="empty">' + T.noBooks + "<br>+ " + T.newBook + "</div>"; return; }
       list.innerHTML = "";
       snap.docs.forEach((d) => {
         const b = d.data();
         const c = document.createElement("div");
-        c.className = "card click";
+        const nReq = (b.delReq || []).length;
+        c.className = "card click" + (b.deleteRequested ? " pending" : "");
         c.innerHTML = '<div class="name">' + esc(b.title) + "</div>" +
-          '<div class="info">Modifié le ' + fmt(b.updatedAt || b.createdAt) + (b.updatedBy ? " par " + esc(b.updatedBy) : "") + "</div>";
+          '<div class="info">' + T.modified(fmt(b.updatedAt || b.createdAt), esc(b.updatedBy || "")) + "</div>" +
+          (b.deleteRequested ? '<div class="pend">🗑 ⏳ ' + T.del + " — " + esc(b.deleteRequestedBy || "") + (isOwner() ? '<span class="fr">Suppression demandée : ouvrez le livre pour valider ou refuser</span>' : "") + "</div>" : "") +
+          (nReq ? '<div class="pend">🗑 ⏳ ' + nk(nReq) + (isOwner() ? '<span class="fr">' + nReq + " partie(s) à supprimer : à valider</span>" : "") + "</div>" : "");
         c.onclick = () => openBook({ id: d.id, title: b.title });
         list.appendChild(c);
       });
     }, (e) => { list.innerHTML = '<div class="empty">' + esc(errText(e)) + "</div>"; }));
   }
-  $("btnNewBook").onclick = () => askName("Nouveau livre", "", "Titre du livre", (title) => {
+  $("btnNewBook").onclick = () => askName(T.newBook, "", T.bookTitle, (title) => {
     db.collection("atelier_books").add({ title, createdAt: TS(), updatedAt: TS(), updatedBy: me.name })
-      .then(() => toast("Livre créé ✅")).catch((e) => toast(errText(e)));
+      .then(() => toast("✅")).catch((e) => toast(errText(e)));
   });
 
   // ---------- Un livre ----------
@@ -432,15 +454,34 @@
     book = b;
     setView("book", b.title);
     unsubs.push(db.collection("atelier_books").doc(b.id).onSnapshot((d) => {
-      if (!d.exists) { toast("Ce livre a été supprimé."); openBooks(); return; }
-      book.title = d.data().title;
+      if (!d.exists) { toast("🗑"); openBooks(); return; }
+      const bd = d.data();
+      book.title = bd.title;
+      book.delReq = bd.delReq || [];
       $("hTitle").textContent = book.title;
-      $("bookHead").innerHTML =
-        '<div class="title">' + esc(book.title) + "</div>" +
-        '<div class="actions" style="margin-top:0"><button id="bRename">Renommer le livre</button>' +
-        (isOwner() ? '<button id="bDelete" class="red">Supprimer le livre</button>' : "") + "</div>";
-      $("bRename").onclick = () => askName("Renommer le livre", book.title, "", (t) =>
+      let h = '<div class="title">' + esc(book.title) + "</div>";
+      if (bd.deleteRequested) {
+        h += '<div class="pend" style="margin-bottom:8px">🗑 ⏳ ' + T.del + " — " + esc(bd.deleteRequestedBy || "") + " • " + fmt(bd.deleteRequestedAt) +
+          (isOwner() ? '<span class="fr">' + esc(bd.deleteRequestedBy || "Un auteur") + " demande la suppression de ce livre.</span>" : "") + "</div>";
+      }
+      h += '<div class="actions" style="margin-top:0"><button id="bRename">' + T.rename + "</button>";
+      if (isOwner()) {
+        if (bd.deleteRequested) h += '<button id="bKeep" class="ok">✔ Garder le livre (refuser)</button>';
+        h += '<button id="bDelete" class="red">' + (bd.deleteRequested ? "Valider la suppression" : "Supprimer le livre") + "</button>";
+      } else {
+        h += bd.deleteRequested ? '<button id="bUndo">↩ ' + T.cancel + "</button>" : '<button id="bAsk" class="red">🗑 ' + T.del + "</button>";
+      }
+      $("bookHead").innerHTML = h + "</div>";
+      $("bRename").onclick = () => askName(T.rename, book.title, "", (t) =>
         d.ref.update({ title: t, updatedAt: TS(), updatedBy: me.name }).catch((e) => toast(errText(e))));
+      const noReq = { deleteRequested: false, deleteRequestedBy: null, deleteRequestedUid: null, deleteRequestedAt: null };
+      if ($("bAsk")) $("bAsk").onclick = () => {
+        if (!confirm("🗑 " + book.title + " — " + T.del + " ؟")) return;
+        d.ref.update({ deleteRequested: true, deleteRequestedBy: me.name, deleteRequestedUid: me.uid, deleteRequestedAt: TS() })
+          .then(() => toast("⏳")).catch((e) => toast(errText(e)));
+      };
+      if ($("bUndo")) $("bUndo").onclick = () => d.ref.update(noReq).catch((e) => toast(errText(e)));
+      if ($("bKeep")) $("bKeep").onclick = () => d.ref.update(noReq).then(() => toast("Demande refusée : le livre est gardé.")).catch((e) => toast(errText(e)));
       if ($("bDelete")) $("bDelete").onclick = () => {
         if (!confirm("Supprimer définitivement « " + book.title + " » ? Les chapitres ne seront plus visibles.")) return;
         if (prompt("Pour confirmer, écrivez SUPPRIMER") !== "SUPPRIMER") return;
@@ -448,36 +489,68 @@
       };
     }));
     const list = $("chList");
-    list.innerHTML = '<div class="empty">Chargement…</div>';
-    unsubs.push(db.collection("atelier_books").doc(b.id).collection("chapters").orderBy("order", "asc").onSnapshot((snap) => {
+    list.innerHTML = '<div class="empty">…</div>';
+    const bookRef = db.collection("atelier_books").doc(b.id);
+    unsubs.push(bookRef.collection("chapters").orderBy("order", "asc").onSnapshot((snap) => {
       chapters = snap.docs.map((d) => Object.assign({ id: d.id }, d.data()));
-      if (!chapters.length) { list.innerHTML = '<div class="empty">Aucune partie.<br>Commencez par l\'introduction avec « + Ajouter une partie ».</div>'; return; }
+      if (!chapters.length) { list.innerHTML = '<div class="empty">+ ' + T.newPart + "</div>"; return; }
       list.innerHTML = "";
       chapters.forEach((ch, i) => {
         const locked = ch.lockUid && ch.lockUid !== me.uid && ch.lockAt && (Date.now() - ch.lockAt.toMillis()) < LOCK_MS;
         const words = (ch.text || "").trim() ? (ch.text || "").trim().split(/\s+/).length : 0;
+        const pend = ch.deleteRequested === true;
         const c = document.createElement("div");
-        c.className = "card";
+        c.className = "card" + (pend ? " pending" : "");
+        let acts = '<button data-a="open">' + T.open + "</button>" +
+          (i > 0 ? '<button data-a="up">↑</button>' : "") +
+          (i < chapters.length - 1 ? '<button data-a="down">↓</button>' : "");
+        if (isOwner()) {
+          if (pend) acts += '<button class="ok" data-a="keep">✔ Garder (refuser)</button><button class="red" data-a="del">Valider la suppression</button>';
+          else acts += '<button class="red" data-a="del">Supprimer</button>';
+        } else {
+          acts += pend ? '<button data-a="undo">↩ ' + T.cancel + "</button>" : '<button class="red" data-a="ask">🗑 ' + T.del + "</button>";
+        }
         c.innerHTML =
           '<div class="row" style="justify-content:space-between"><div class="name">' + esc(partLabel(chapters, i)) + (ch.title ? " — " + esc(ch.title) : "") + "</div>" +
           '<span class="chip s-' + esc(ch.status || "todo") + '">' + esc(STATUS[ch.status] || STATUS.todo) + "</span></div>" +
-          '<div class="info">' + words + " mots • modifié le " + fmt(ch.updatedAt) + (ch.updatedBy ? " par " + esc(ch.updatedBy) : "") + "</div>" +
-          (locked ? '<div class="info" style="color:var(--warn);font-weight:700">✍ En cours d\'écriture par ' + esc(ch.lockName) + "</div>" : "") +
-          '<div class="actions"><button data-a="open">Ouvrir</button>' +
-          (i > 0 ? '<button data-a="up">↑</button>' : "") +
-          (i < chapters.length - 1 ? '<button data-a="down">↓</button>' : "") +
-          (isOwner() ? '<button class="red" data-a="del">Supprimer</button>' : "") + "</div>";
-        c.querySelector('[data-a="open"]').onclick = () => openEditor(ch.id);
-        const up = c.querySelector('[data-a="up"]'), down = c.querySelector('[data-a="down"]'), del = c.querySelector('[data-a="del"]');
-        if (up) up.onclick = () => swap(i, i - 1);
-        if (down) down.onclick = () => swap(i, i + 1);
-        if (del) del.onclick = () => {
-          if (!confirm("Supprimer le chapitre « " + ch.title + " » ?")) return;
-          db.collection("atelier_books").doc(b.id).collection("chapters").doc(ch.id).delete()
-            .then(() => toast("Chapitre supprimé.")).catch((e) => toast(errText(e)));
+          '<div class="info">' + T.words + " " + nk(words) + " • " + T.modified(fmt(ch.updatedAt), esc(ch.updatedBy || "")) + "</div>" +
+          (locked ? '<div class="info" style="color:var(--warn);font-weight:700">✍ ' + T.writing(esc(ch.lockName)) + "</div>" : "") +
+          (pend ? '<div class="pend">🗑 ⏳ ' + T.del + " — " + esc(ch.deleteRequestedBy || "") + " • " + fmt(ch.deleteRequestedAt) +
+            (isOwner() ? '<span class="fr">' + esc(ch.deleteRequestedBy || "Un auteur") + " demande la suppression. À vous de décider.</span>" : "") + "</div>" : "") +
+          '<div class="actions">' + acts + "</div>";
+        const q = (a) => c.querySelector('[data-a="' + a + '"]');
+        const chDoc = bookRef.collection("chapters").doc(ch.id);
+        const noReq = { deleteRequested: false, deleteRequestedBy: null, deleteRequestedUid: null, deleteRequestedAt: null };
+        q("open").onclick = () => openEditor(ch.id);
+        if (q("up")) q("up").onclick = () => swap(i, i - 1);
+        if (q("down")) q("down").onclick = () => swap(i, i + 1);
+        if (q("ask")) q("ask").onclick = () => {
+          if (!confirm("🗑 " + partLabel(chapters, i) + (ch.title ? " — " + ch.title : "") + " — " + T.del + " ؟")) return;
+          const bt = db.batch();
+          bt.update(chDoc, { deleteRequested: true, deleteRequestedBy: me.name, deleteRequestedUid: me.uid, deleteRequestedAt: TS() });
+          bt.update(bookRef, { delReq: firebase.firestore.FieldValue.arrayUnion(ch.id) });
+          bt.commit().then(() => toast("⏳")).catch((e) => toast(errText(e)));
+        };
+        const clearReq = (msg) => {
+          const bt = db.batch();
+          bt.update(chDoc, noReq);
+          bt.update(bookRef, { delReq: firebase.firestore.FieldValue.arrayRemove(ch.id) });
+          bt.commit().then(() => msg && toast(msg)).catch((e) => toast(errText(e)));
+        };
+        if (q("undo")) q("undo").onclick = () => clearReq("↩");
+        if (q("keep")) q("keep").onclick = () => clearReq("Demande refusée : la partie est gardée.");
+        if (q("del")) q("del").onclick = () => {
+          if (!confirm("Supprimer définitivement « " + partLabel(chapters, i) + (ch.title ? " — " + ch.title : "") + " » ?")) return;
+          const bt = db.batch();
+          bt.delete(chDoc);
+          bt.update(bookRef, { delReq: firebase.firestore.FieldValue.arrayRemove(ch.id) });
+          bt.commit().then(() => toast("Partie supprimée.")).catch((e) => toast(errText(e)));
         };
         list.appendChild(c);
       });
+      // Nettoyer les demandes orphelines (partie déjà supprimée)
+      if (isOwner() && book.delReq && book.delReq.some((id) => !chapters.find((c) => c.id === id)))
+        bookRef.update({ delReq: book.delReq.filter((id) => chapters.find((c) => c.id === id)) }).catch(() => {});
     }, (e) => { list.innerHTML = '<div class="empty">' + esc(errText(e)) + "</div>"; }));
   }
   function swap(i, j) {
@@ -490,10 +563,10 @@
   }
   $("btnNewCh").onclick = () => {
     const def = !chapters.length ? "intro" : "chapter";
-    const m = modal("<h3>Nouvelle partie</h3>" +
+    const m = modal("<h3>" + T.newPart + "</h3>" +
       '<select id="pKind" class="field">' + kindOptions(def) + "</select>" +
-      '<input id="pTitle" class="field" placeholder="Titre (facultatif pour l\'introduction)">' +
-      '<div class="row2"><button id="pNo" class="btn secondary">Annuler</button><button id="pOk" class="btn">Créer</button></div>');
+      '<input id="pTitle" class="field" placeholder="' + T.partTitle + '">' +
+      '<div class="row2"><button id="pNo" class="btn secondary">' + T.cancel + '</button><button id="pOk" class="btn">' + T.create + '</button></div>');
     m.querySelector("#pNo").onclick = closeModal;
     m.querySelector("#pOk").onclick = () => {
       const kind = m.querySelector("#pKind").value;
@@ -508,11 +581,10 @@
 
   // ---------- Export ----------
   $("btnExport").onclick = () => {
-    const m = modal("<h3>Exporter « " + esc(book.title) + " »</h3>" +
-      "<p class='muted'>Tous les chapitres, dans l'ordre, avec leurs titres.</p>" +
-      '<button id="xWord" class="btn" style="margin-bottom:8px">Fichier Word (.doc)</button>' +
-      '<button id="xPdf" class="btn secondary" style="margin-bottom:8px">PDF / Imprimer</button>' +
-      '<button id="xNo" class="btn secondary">Fermer</button>');
+    const m = modal("<h3>" + "ߞߊ߬ߝߊ ߟߊߓߐ߫" + " — " + esc(book.title) + "</h3>" +
+      '<button id="xWord" class="btn" style="margin-bottom:8px">📄 Word (.doc)</button>' +
+      '<button id="xPdf" class="btn secondary" style="margin-bottom:8px">📕 PDF</button>' +
+      '<button id="xNo" class="btn secondary">' + T.close + '</button>');
     m.querySelector("#xNo").onclick = closeModal;
     m.querySelector("#xWord").onclick = () => { closeModal(); exportBook("word"); };
     m.querySelector("#xPdf").onclick = () => { closeModal(); exportBook("pdf"); };
@@ -574,11 +646,11 @@
     const s = $("saveState");
     s.className = "save " + cls;
     s.title = txt;
-    s.textContent = cls === "ok" ? "✓" : cls === "bad" ? "⚠ " + txt : (txt === "Lecture seule" ? txt : "…");
+    s.textContent = cls === "ok" ? "✓" : cls === "bad" ? "⚠ " + txt : (txt === "Lecture seule" ? T.readOnly : "…");
   }
   function countWords() {
     const t = ed.value.trim();
-    $("wordCount").textContent = (t ? t.split(/\s+/).length : 0) + " mots • " + ed.value.length + " caractères";
+    $("wordCount").textContent = T.words + " " + nk(t ? t.split(/\s+/).length : 0);
   }
 
   async function openEditor(chId) {
@@ -587,10 +659,10 @@
     snapTaken = false;
     setView("edit", book.title);
     ed.value = ""; lastSaved = ""; canEdit = false; ed.readOnly = true;
-    setSave("wait", "Chargement…");
+    setSave("wait", "…");
     let first = true;
     unsubs.push(chRef().onSnapshot((d) => {
-      if (!d.exists) { toast("Ce chapitre a été supprimé."); openBook(book); return; }
+      if (!d.exists) { toast("🗑"); openBook(book); return; }
       const c = d.data();
       if (document.activeElement !== $("chTitle")) $("chTitle").value = c.title || "";
       $("chStatus").value = c.status || "todo";
@@ -604,7 +676,7 @@
         try {
           const dr = JSON.parse(localStorage.getItem(draftKey()) || "null");
           if (dr && dr.text !== ed.value && dr.at > ((c.updatedAt && c.updatedAt.toMillis()) || 0) && !lockedByOther) {
-            if (confirm("Un texte non envoyé a été retrouvé sur cet appareil. Le récupérer ?")) ed.value = dr.text;
+            if (confirm("💾 ؟\n(Un texte non envoyé a été retrouvé sur cet appareil. Le récupérer ?)")) ed.value = dr.text;
           }
         } catch (e) {}
         lastVersionAt = Date.now();
@@ -614,7 +686,7 @@
       } else if (!canEdit) {
         ed.value = c.text || "";
         countWords();
-        if (!lockedByOther) { $("lockMsg").innerHTML = 'Le chapitre est libre. <button id="takeNow" class="btn small" style="margin-top:6px">Écrire maintenant</button>';
+        if (!lockedByOther) { $("lockMsg").innerHTML = '✍ <button id="takeNow" class="btn small" style="margin-top:6px">' + T.take + '</button>';
           $("takeNow").onclick = takeLock; }
       } else if (c.lockUid && c.lockUid !== me.uid) {
         // Quelqu'un a pris la main
@@ -630,9 +702,9 @@
     canEdit = false;
     ed.readOnly = true;
     $("lockMsg").classList.remove("hidden");
-    $("lockMsg").innerHTML = "✍ <b>" + esc(name || "Un autre auteur") + "</b> écrit ce chapitre en ce moment. Vous le voyez en lecture seule, mis à jour en direct." +
-      '<br><button id="forceLock" class="btn small secondary" style="margin-top:6px">Prendre la main quand même</button>';
-    $("forceLock").onclick = () => { if (confirm("L'autre auteur ne pourra plus écrire dans ce chapitre. Continuer ?")) takeLock(); };
+    $("lockMsg").innerHTML = "✍ " + T.writing("<b>" + esc(name || "") + "</b>") + " (" + T.readOnly + ")" +
+      '<br><button id="forceLock" class="btn small secondary" style="margin-top:6px">' + T.take + '</button>';
+    $("forceLock").onclick = () => { if (confirm(T.take + " ؟")) takeLock(); };
     setSave("wait", "Lecture seule");
   }
 
@@ -713,35 +785,35 @@
     if (t) chRef().update({ title: t, updatedAt: TS(), updatedBy: me.name }).catch((e) => toast(errText(e)));
   });
   $("chKind").onchange = () => chRef().update({ kind: $("chKind").value, updatedAt: TS(), updatedBy: me.name })
-    .then(() => toast("Type : " + KINDS[$("chKind").value])).catch((e) => toast(errText(e)));
+    .then(() => toast("✓ " + KINDS[$("chKind").value])).catch((e) => toast(errText(e)));
   $("chStatus").onchange = () => chRef().update({ status: $("chStatus").value, updatedAt: TS(), updatedBy: me.name })
-    .then(() => toast("Statut : " + STATUS[$("chStatus").value])).catch((e) => toast(errText(e)));
+    .then(() => toast("✓ " + STATUS[$("chStatus").value])).catch((e) => toast(errText(e)));
 
   // Versions
   $("btnVersions").onclick = async () => {
-    const m = modal("<h3>Versions du chapitre</h3><p class='muted'>Une version est gardée automatiquement toutes les 10 minutes d'écriture et à chaque sortie du chapitre.</p>" +
-      (canEdit ? '<button id="vSave" class="btn" style="margin-bottom:10px">Garder une version maintenant</button>' : "") +
-      '<div id="vList">Chargement…</div><button id="vClose" class="btn secondary" style="margin-top:8px">Fermer</button>');
+    const m = modal("<h3>" + T.versions + "</h3>" +
+      (canEdit ? '<button id="vSave" class="btn" style="margin-bottom:10px">💾 +</button>' : "") +
+      '<div id="vList">…</div><button id="vClose" class="btn secondary" style="margin-top:8px">' + T.close + '</button>');
     m.querySelector("#vClose").onclick = closeModal;
-    if (m.querySelector("#vSave")) m.querySelector("#vSave").onclick = () => saveVersion(ed.value, true).then(() => { toast("Version gardée ✅"); closeModal(); });
+    if (m.querySelector("#vSave")) m.querySelector("#vSave").onclick = () => saveVersion(ed.value, true).then(() => { toast("💾 ✅"); closeModal(); });
     try {
       const snap = await chRef().collection("versions").orderBy("at", "desc").limit(30).get();
       const vl = m.querySelector("#vList");
-      if (snap.empty) { vl.innerHTML = '<div class="empty">Aucune version pour l\'instant.</div>'; return; }
+      if (snap.empty) { vl.innerHTML = '<div class="empty">—</div>'; return; }
       vl.innerHTML = "";
       snap.docs.forEach((d) => {
         const v = d.data();
         const words = (v.text || "").trim() ? v.text.trim().split(/\s+/).length : 0;
         const el = document.createElement("div");
         el.className = "ver";
-        el.innerHTML = "<b>" + fmt(v.at) + "</b> — " + esc(v.by) + " • " + words + " mots" +
+        el.innerHTML = "<b>" + fmt(v.at) + "</b> — " + esc(v.by) + " • " + T.words + " " + nk(words) +
           '<div class="pv">' + esc((v.text || "").slice(0, 300)) + "</div>" +
-          (canEdit ? '<button class="btn small secondary">Revenir à cette version</button>' : "");
+          (canEdit ? '<button class="btn small secondary">↩ ' + T.backTo + '</button>' : "");
         const b = el.querySelector("button");
         if (b) b.onclick = () => {
-          if (!confirm("Remplacer le texte actuel par cette version ? (Le texte actuel sera gardé comme version.)")) return;
+          if (!confirm(T.backTo + " ؟")) return;
           saveVersion(ed.value, true).then(() => {
-            ed.value = v.text || ""; countWords(); lastSaved = "__"; saveNow(); closeModal(); toast("Version restaurée.");
+            ed.value = v.text || ""; countWords(); lastSaved = "__"; saveNow(); closeModal(); toast("↩ ✅");
           });
         };
         vl.appendChild(el);
@@ -807,13 +879,12 @@
     return { html, del, ins };
   }
   $("btnCorrections").onclick = async () => {
-    const m = modal("<h3>Voir les corrections</h3>" +
-      "<p class='muted'>Comparer le texte actuel avec une version précédente.<br>" +
-      "<del>barré rouge</del> = retiré • <ins>vert</ins> = ajouté</p>" +
-      '<select id="cVer" class="field"><option>Chargement…</option></select>' +
+    const m = modal("<h3>" + T.corrections + "</h3>" +
+      "<p class='muted'><del>" + T.removed + "</del> • <ins>" + T.added + "</ins></p>" +
+      '<select id="cVer" class="field"><option>…</option></select>' +
       '<div id="cStats" class="muted" style="margin-bottom:6px"></div>' +
       '<div id="cOut" class="diff"></div>' +
-      '<button id="cClose" class="btn secondary" style="margin-top:10px">Fermer</button>');
+      '<button id="cClose" class="btn secondary" style="margin-top:10px">' + T.close + '</button>');
     m.querySelector(".box").style.maxWidth = "760px";
     m.querySelector("#cClose").onclick = closeModal;
     try {
@@ -821,18 +892,18 @@
       const sel = m.querySelector("#cVer");
       if (snap.empty) {
         sel.outerHTML = "";
-        m.querySelector("#cOut").innerHTML = '<div class="empty">Pas encore de version à comparer. Une version est gardée quand on quitte le chapitre après l\'avoir modifié.</div>';
+        m.querySelector("#cOut").innerHTML = '<div class="empty">—</div>';
         return;
       }
       const vers = snap.docs.map((d) => d.data());
       sel.innerHTML = vers.map((v, i) =>
-        '<option value="' + i + '">' + (i === 0 ? "Texte d'origine — " : "") + fmt(v.at) + " — " + esc(v.by) + "</option>").join("");
+        '<option value="' + i + '">' + (i === 0 ? T.original + " — " : "") + fmt(v.at) + " — " + esc(v.by) + "</option>").join("");
       const show = () => {
         const v = vers[+sel.value];
         const r = diffHtml(v.text || "", ed.value);
         m.querySelector("#cStats").textContent = (r.del || r.ins)
-          ? r.del + " mot(s) retiré(s) • " + r.ins + " mot(s) ajouté(s)"
-          : "Aucune différence avec le texte actuel.";
+          ? T.removed + " : " + nk(r.del) + " • " + T.added + " : " + nk(r.ins)
+          : "=";
         m.querySelector("#cOut").innerHTML = r.html;
       };
       sel.onchange = show;
@@ -844,17 +915,17 @@
   function loadComments() {
     const list = $("cmtList");
     unsubs.push(chRef().collection("comments").orderBy("at", "asc").onSnapshot((snap) => {
-      if (snap.empty) { list.innerHTML = '<div class="muted" style="margin-bottom:8px">Aucun commentaire.</div>'; return; }
+      if (snap.empty) { list.innerHTML = '<div class="muted" style="margin-bottom:8px">—</div>'; return; }
       list.innerHTML = "";
       snap.docs.forEach((d) => {
         const c = d.data();
         const el = document.createElement("div");
         el.className = "cmt";
         el.innerHTML = '<div class="by"><span>' + esc(c.by) + " • " + fmt(c.at) + "</span>" +
-          ((c.uid === me.uid || isOwner()) ? "<button>Supprimer</button>" : "") + "</div>" +
+          ((c.uid === me.uid || isOwner()) ? "<button>" + T.del + "</button>" : "") + "</div>" +
           '<div class="tx">' + esc(c.text) + "</div>";
         const b = el.querySelector("button");
-        if (b) b.onclick = () => { if (confirm("Supprimer ce commentaire ?")) d.ref.delete(); };
+        if (b) b.onclick = () => { if (confirm(T.del + " ؟")) d.ref.delete(); };
         list.appendChild(el);
       });
     }));
@@ -894,12 +965,12 @@
     }, (e) => { list.innerHTML = '<div class="empty">' + esc(errText(e)) + "</div>"; }));
   }
   $("btnAddMember").onclick = () => {
-    const m = modal("<h3>Nouvel auteur</h3>" +
+    const m = modal("<div class='ltr' dir='ltr'><h3>Nouvel auteur</h3>" +
       '<input id="aName" class="field" placeholder="Nom affiché (ex : Oumar)">' +
       '<input id="aUser" class="field" placeholder="Identifiant (ex : oumar)" autocapitalize="none" autocorrect="off">' +
       '<input id="aPw" class="field" placeholder="Mot de passe" value="' + Math.floor(10000000 + Math.random() * 89999999) + '" autocapitalize="none">' +
       '<div id="aErr" class="err"></div>' +
-      '<div class="row2"><button id="aNo" class="btn secondary">Annuler</button><button id="aOk" class="btn">Créer</button></div>');
+      '<div class="row2"><button id="aNo" class="btn secondary">Annuler</button><button id="aOk" class="btn">Créer</button></div></div>');
     m.querySelector("#aNo").onclick = closeModal;
     m.querySelector("#aOk").onclick = async () => {
       const name = m.querySelector("#aName").value.trim();
@@ -916,8 +987,8 @@
         await creatorAuth.signOut();
         await db.collection("atelier_members").doc(uid).set({ name, username, role: "author", active: true, createdAt: TS() });
         const text = "ߡߺߞߺߟߺߘ — espace des auteurs\nAdresse : https://" + location.host + location.pathname + "\nIdentifiant : " + username + "\nMot de passe : " + pw;
-        const m2 = modal("<h3>Auteur créé ✅</h3><p>Envoyez-lui ces informations :</p><pre class='creds'>" + esc(text) + "</pre>" +
-          '<div class="row2"><button id="cClose" class="btn secondary">Fermer</button><button id="cCopy" class="btn">Copier</button></div>');
+        const m2 = modal("<div class='ltr' dir='ltr'><h3>Auteur créé ✅</h3><p>Envoyez-lui ces informations :</p><pre class='creds'>" + esc(text) + "</pre>" +
+          '<div class="row2"><button id="cClose" class="btn secondary">Fermer</button><button id="cCopy" class="btn">Copier</button></div></div>');
         m2.querySelector("#cClose").onclick = closeModal;
         m2.querySelector("#cCopy").onclick = () => {
           const done = () => toast("Copié. Collez-le dans WhatsApp.");
