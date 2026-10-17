@@ -744,11 +744,13 @@
         c.innerHTML = '<div class="name">' + esc(u.name) + (owner ? " (propriétaire)" : "") + "</div>" +
           '<div class="info">Identifiant : ' + esc(u.username) + "</div>" +
           '<div class="info" style="font-weight:700;color:' + (u.active ? "var(--ok)" : "var(--danger)") + '">' + (u.active ? "Actif" : "Bloqué") + "</div>" +
-          (owner ? "" : '<div class="actions">' + (u.active ? '<button class="red" data-a="block">Bloquer</button>' : '<button data-a="unblock">Débloquer</button>') +
+          (owner ? (d.id === me.uid ? '<div class="info">C\'est vous</div>' : '<div class="info" style="color:var(--danger)">Ancienne ligne, sans effet</div><div class="actions"><button class="red" data-a="old">Supprimer cette ancienne ligne</button></div>') : '<div class="actions">' + (u.active ? '<button class="red" data-a="block">Bloquer</button>' : '<button data-a="unblock">Débloquer</button>') +
             '<button data-a="rename">Changer le nom</button></div>');
         const b = c.querySelector("[data-a=block]"), ub = c.querySelector("[data-a=unblock]"), rn = c.querySelector("[data-a=rename]");
         if (b) b.onclick = () => { if (confirm("Bloquer " + u.name + " ? Il sera déconnecté immédiatement.")) d.ref.update({ active: false }).then(() => toast("Compte bloqué.")); };
         if (ub) ub.onclick = () => d.ref.update({ active: true }).then(() => toast("Compte débloqué."));
+        const old = c.querySelector("[data-a=old]");
+        if (old) old.onclick = () => { if (confirm("Supprimer cette ancienne ligne ?")) d.ref.delete().then(() => toast("Ancienne ligne supprimée.")).catch((e) => toast(errText(e))); };
         if (rn) rn.onclick = () => askName("Nom de l'auteur", u.name, "", (n) => d.ref.update({ name: n }));
         list.appendChild(c);
       });
