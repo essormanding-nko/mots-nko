@@ -217,6 +217,16 @@
 
   firebase.initializeApp(CONFIG);
   const auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+  // Mémoire de connexion : dans l'application Android, identifiant + mot de passe gardés sur le téléphone
+  const APP = window.MKLDApp || null;
+  const memo = {
+    save(id, pw) { try { if (APP && APP.remember) APP.remember(id, pw); localStorage.setItem("mkldUser", id); } catch (e) {} },
+    get() { try { if (APP && APP.recall) { const r = JSON.parse(APP.recall() || "null"); if (r && r.id && r.pw) return r; } } catch (e) {} return null; },
+    forget() { try { if (APP && APP.forget) APP.forget(); } catch (e) {} },
+    lastUser() { try { return localStorage.getItem("mkldUser") || ""; } catch (e) { return ""; } }
+  };
+  let autoTried = false;
   const db = firebase.firestore();
   try { db.enablePersistence({ synchronizeTabs: true }).catch(() => {}); } catch (e) {}
   const creatorAuth = firebase.initializeApp(CONFIG, "creator").auth();
@@ -284,7 +294,17 @@
     if (unsubMe) { unsubMe(); unsubMe = null; }
     if (!user || !user.email || !user.email.endsWith("@" + DOMAIN)) {
       if (user) auth.signOut();
+      const saved = !user && !autoTried ? memo.get() : null;
+      if (saved) {
+        autoTried = true;
+        auth.signInWithEmailAndPassword(emailFor(saved.id), saved.pw).catch((e) => {
+          if (!String(e.code || "").includes("network")) memo.forget();
+          showLogin();
+        });
+        return;
+      }
       showLogin();
+      if (!$("lUser").value) $("lUser").value = memo.lastUser();
       return;
     }
     me.uid = user.uid;
@@ -297,6 +317,7 @@
     unsubMe = db.collection("atelier_members").doc(user.uid).onSnapshot((d) => {
       if (!d.exists || d.data().active !== true) {
         toast("Accès suspendu. Contactez le propriétaire.");
+        memo.forget();
         auth.signOut();
         return;
       }
@@ -327,6 +348,7 @@
     if (!id.trim() || !pw) { $("lErr").textContent = "Entrez votre identifiant et votre mot de passe."; return; }
     $("btnLogin").disabled = true;
     auth.signInWithEmailAndPassword(emailFor(id), pw)
+      .then(() => memo.save(id.trim().toLowerCase(), pw))
       .catch((e) => { $("lErr").textContent = errText(e); })
       .finally(() => { $("btnLogin").disabled = false; });
   };
@@ -359,7 +381,8 @@
   };
 
   $("btnLogout").onclick = () => {
-    if (!confirm("Se déconnecter ?")) return;
+    if (!confirm("Se déconnecter ? Il faudra retaper l'identifiant et le mot de passe. (Pour simplement quitter, fermez l'application.)")) return;
+    memo.forget();
     releaseLock().finally(() => auth.signOut());
   };
   $("btnBack").onclick = () => {
