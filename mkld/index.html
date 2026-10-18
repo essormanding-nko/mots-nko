@@ -107,24 +107,25 @@
 </head>
 <body>
 
-<div id="netBar" class="net hidden">ߜߊ߲߬ߞߎ߲߬ߓߊߟߌ: ߛߓߍߟߌ ߘߌ߫ ߕߊ߯ ߣߌ߫ ߓߟߐߟߐ ߞߐߛߊ߬ߦߌ߬ ߘߊ߫.</div>
+<div id="netBar" class="net hidden" data-fr="Hors ligne — votre texte est gardé et partira dès le retour d'Internet">ߜߊ߲߬ߞߎ߲߬ߓߊߟߌ: ߛߓߍߟߌ ߘߌ߫ ߕߊ߯ ߣߌ߫ ߓߟߐߟߐ ߞߐߛߊ߬ߦߌ߬ ߘߊ߫.</div>
 
 <header>
   <button id="btnBack" class="hidden">←</button>
   <img src="icon-192.png" alt="" style="width:34px;height:34px;border-radius:50%;background:#fff;flex:none">
   <h1 id="hTitle" class="nko">ߡߺߞߺߟߺߘ</h1>
+  <button id="btnLang" title="Français / ߒߞߏ">FR</button>
   <button id="btnMembers" class="hidden">Comptes</button>
-  <button id="btnLogout" class="hidden">ߓߐ߫</button>
+  <button id="btnLogout" class="hidden" data-fr="Sortir">ߓߐ߫</button>
 </header>
 
 <!-- Connexion -->
 <section id="vLogin" class="login hidden">
   <img src="logo.jpg" alt="Logo" style="width:170px;height:170px;border-radius:50%;display:block;margin:0 auto 10px">
   <h2 class="nko" style="font-size:34px">ߡߺߞߺߟߺߘ</h2>
-  <p>ߦߙߐ ߣߌ߲߬ ߦߋ߫ ߛߓߍߦߟߊ ߟߎ߬ ߟߋ߬ ߘߐ߬ߙߐ߲߫ ߕߊ߫ ߘߌ߫<span class="fr">Union pour le Développement des Langues Mandingues</span></p>
-  <input id="lUser" class="field" placeholder="ߌ ߕߐ߮" autocapitalize="none" autocorrect="off">
-  <input id="lPw" class="field" type="password" placeholder="ߕߊ߬ߡߌ߲߬ߞߎߡߊ" autocomplete="current-password">
-  <button id="btnLogin" class="btn">ߜߊ߲߬ߞߎ߲߬ߠߌ߲</button>
+  <p data-fr-html="Espace privé des auteurs<span class='fr'>Union pour le Développement des Langues Mandingues</span>">ߦߙߐ ߣߌ߲߬ ߦߋ߫ ߛߓߍߦߟߊ ߟߎ߬ ߟߋ߬ ߘߐ߬ߙߐ߲߫ ߕߊ߫ ߘߌ߫<span class="fr">Union pour le Développement des Langues Mandingues</span></p>
+  <input id="lUser" class="field" placeholder="ߌ ߕߐ߮" data-frph="Identifiant" autocapitalize="none" autocorrect="off">
+  <input id="lPw" class="field" type="password" placeholder="ߕߊ߬ߡߌ߲߬ߞߎߡߊ" data-frph="Mot de passe" autocomplete="current-password">
+  <button id="btnLogin" class="btn" data-fr="Se connecter">ߜߊ߲߬ߞߎ߲߬ߠߌ߲</button>
   <div id="lErr" class="err"></div>
   <button id="btnSetup" class="link">Première configuration (propriétaire)</button>
 </section>
@@ -133,8 +134,8 @@
   <!-- Livres -->
   <section id="vBooks">
     <div class="row" style="justify-content:space-between">
-      <div class="title">ߊ߲ ߠߊ߫ ߞߊ߬ߝߊ ߟߎ߬</div>
-      <button id="btnNewBook" class="btn small">+ ߞߊ߬ߝߊ߫ ߞߎߘߊ</button>
+      <div class="title" data-fr="Nos livres">ߊ߲ ߠߊ߫ ߞߊ߬ߝߊ ߟߎ߬</div>
+      <button id="btnNewBook" class="btn small" data-fr="+ Nouveau livre">+ ߞߊ߬ߝߊ߫ ߞߎߘߊ</button>
     </div>
     <div id="bookList"></div>
   </section>
@@ -143,38 +144,38 @@
   <section id="vBook" class="hidden">
     <div id="bookHead"></div>
     <div class="row" style="margin:6px 0 12px">
-      <button id="btnNewCh" class="btn small">+ ߞߎߘߎ߲ ߘߏ߫ ߝߙߴߊ߬ ߞߊ߲߫</button>
-      <button id="btnExport" class="btn small secondary">ߞߊ߬ߝߊ ߟߊߓߐ߫</button>
+      <button id="btnNewCh" class="btn small" data-fr="+ Ajouter une partie">+ ߞߎߘߎ߲ ߘߏ߫ ߝߙߴߊ߬ ߞߊ߲߫</button>
+      <button id="btnExport" class="btn small secondary" data-fr="Exporter le livre">ߞߊ߬ߝߊ ߟߊߓߐ߫</button>
     </div>
     <div id="chList"></div>
   </section>
 
   <!-- Éditeur -->
   <section id="vEdit" class="hidden">
-    <input id="chTitle" class="field" placeholder="ߞߎߘߎ߲ ߕߐ߮">
+    <input id="chTitle" class="field" placeholder="ߞߎߘߎ߲ ߕߐ߮" data-frph="Titre de la partie">
     <div id="lockMsg" class="lockmsg hidden"></div>
     <div class="edbar">
       <select id="chKind"></select>
       <select id="chStatus">
-        <option value="todo">ߛߓߍ߬ߕߊ</option>
-        <option value="doing">ߊ߬ ߦߋ߫ ߛߋ߲߬ߠߊ߫</option>
-        <option value="review">ߘߐ߬ߞߙߊ߲߬ߕߊ</option>
-        <option value="done">ߊ߬ ߓߘߊ߫ ߓߊ߲߫</option>
+        <option value="todo" data-fr="À écrire">ߛߓߍ߬ߕߊ</option>
+        <option value="doing" data-fr="En cours">ߊ߬ ߦߋ߫ ߛߋ߲߬ߠߊ߫</option>
+        <option value="review" data-fr="À relire">ߘߐ߬ߞߙߊ߲߬ߕߊ</option>
+        <option value="done" data-fr="Terminé">ߊ߬ ߓߘߊ߫ ߓߊ߲߫</option>
       </select>
       <button id="fMinus" aria-label="Texte plus petit">A−</button>
       <button id="fPlus" aria-label="Texte plus grand">A+</button>
-      <button id="btnVersions">ߓߐߢߐ߲߯ߡߊ ߟߎ߬</button>
-      <button id="btnCorrections">ߛߊߞߍߟߌ</button>
+      <button id="btnVersions" data-fr="Versions">ߓߐߢߐ߲߯ߡߊ ߟߎ߬</button>
+      <button id="btnCorrections" data-fr="Corrections">ߛߊߞߍߟߌ</button>
       <span id="saveState" class="save ok"></span>
     </div>
     <textarea id="editor" dir="rtl" lang="nqo" spellcheck="false" placeholder="ߛߓߍߟߌ ߘߊߡߌ߬ߘߊ߫ ߦߊ߲߬…"></textarea>
     <div id="wordCount" class="count"></div>
 
     <div class="comments">
-      <h3>ߞߊ߲߬ߞߎߡߊ ߟߎ߬</h3>
+      <h3 data-fr="Commentaires">ߞߊ߲߬ߞߎߡߊ ߟߎ߬</h3>
       <div id="cmtList"></div>
-      <textarea id="cmtText" class="field" rows="2" placeholder="ߞߊ߲߬ߞߎߡߊ ߘߏ߫ ߕߏ߫ ߛߌ߰ߘߊ ߣߌ߲߬ ߞߊ߲߬…"></textarea>
-      <button id="btnCmt" class="btn small">ߞߊ߲߬ߞߎߡߊ ߝߊ߬ߙߴߊ߬ ߞߊ߲߫</button>
+      <textarea id="cmtText" class="field" rows="2" placeholder="ߞߊ߲߬ߞߎߡߊ ߘߏ߫ ߕߏ߫ ߛߌ߰ߘߊ ߣߌ߲߬ ߞߊ߲߬…" data-frph="Laisser une remarque sur ce chapitre…"></textarea>
+      <button id="btnCmt" class="btn small" data-fr="Ajouter le commentaire">ߞߊ߲߬ߞߎߡߊ ߝߊ߬ߙߴߊ߬ ߞߊ߲߫</button>
     </div>
   </section>
 
@@ -221,8 +222,41 @@
     modified: (d, n) => "ߊ߬ ߡߊߦߟߍ߬ߡߊ߲߬ ߠߊ߫ " + d + (n ? " ߸ " + n + " ߓߟߏ߫" : ""),
     writing: (n) => n + " ߦߋ߫ ߛߌ߰ߘߊ ߣߌ߲߬ ߛߓߍ ߞߊ߲߬ ߕߊ߲߬."
   };
-  // Chiffres N'Ko : 0123456789 → ߀߁߂߃߄߅߆߇߈߉
-  const nk = (x) => String(x).replace(/[0-9]/g, (d) => String.fromCharCode(0x07C0 + +d));
+  T.needBoth = "ߌ ߕߐ߮ + ߕߊ߬ߡߌ߲߬ߞߎߡߊ"; T.logout = "ߓߐ߫"; T.exportT = "ߞߊ߬ߝߊ ߟߊߓߐ߫";
+  // Langue de l'interface : N'Ko (par défaut) ou français
+  let LANG = "nqo";
+  try { LANG = localStorage.getItem("mkldLang") || "nqo"; } catch (e) {}
+  if (LANG === "fr") {
+    Object.assign(STATUS, { todo: "À écrire", doing: "En cours", review: "À relire", done: "Terminé" });
+    Object.assign(KINDS, { preface: "Préface", intro: "Introduction", chapter: "Chapitre", conclusion: "Conclusion", annex: "Annexe" });
+    Object.assign(T, {
+      badLogin: "Identifiant ou mot de passe incorrect.", newBook: "Nouveau livre", bookTitle: "Titre du livre",
+      noBooks: "Aucun livre pour l'instant.", rename: "Renommer le livre", newPart: "Nouvelle partie",
+      partTitle: "Titre de la partie", open: "Ouvrir", words: "Mots :", readOnly: "Lecture seule", take: "Prendre la main",
+      versions: "Versions", backTo: "Revenir à cette version", corrections: "Corrections", removed: "Retiré",
+      added: "Ajouté", original: "Texte d'origine", del: "Supprimer", cancel: "Annuler",
+      ok: "Valider", close: "Fermer", create: "Créer", noNet: "Pas de connexion Internet.",
+      modified: (d, n) => "Modifié le " + d + (n ? " par " + n : ""),
+      writing: (n) => n + " écrit ce chapitre en ce moment.",
+      needBoth: "Entrez votre identifiant et votre mot de passe.", logout: "Se déconnecter", exportT: "Exporter"
+    });
+  }
+  // Chiffres N'Ko : 0123456789 → ߀߁߂߃߄߅߆߇߈߉ (chiffres ordinaires en français)
+  const nk = (x) => LANG === "fr" ? String(x) : String(x).replace(/[0-9]/g, (d) => String.fromCharCode(0x07C0 + +d));
+  function applyLang() {
+    const b = document.getElementById("btnLang");
+    if (b) {
+      b.textContent = LANG === "fr" ? "ߒߞߏ" : "FR";
+      b.onclick = () => { try { localStorage.setItem("mkldLang", LANG === "fr" ? "nqo" : "fr"); } catch (e) {} location.reload(); };
+    }
+    if (LANG !== "fr") return;
+    document.documentElement.setAttribute("dir", "ltr");
+    document.documentElement.setAttribute("lang", "fr");
+    document.querySelectorAll("[data-fr]").forEach((el) => { el.textContent = el.dataset.fr; });
+    document.querySelectorAll("[data-fr-html]").forEach((el) => { el.innerHTML = el.dataset.frHtml; });
+    document.querySelectorAll("[data-frph]").forEach((el) => { el.placeholder = el.dataset.frph; });
+  }
+  applyLang();
   function partLabel(list, i) {
     const k = list[i].kind || "chapter";
     if (k !== "chapter") return KINDS[k];
@@ -276,7 +310,7 @@
     if (c.includes("email-already-in-use")) return "Cet identifiant existe déjà.";
     if (c.includes("weak-password")) return "Mot de passe trop court (6 caractères minimum).";
     if (c.includes("invalid-credential") || c.includes("wrong-password") || c.includes("user-not-found") || c.includes("invalid-login") || c.includes("invalid-email"))
-      return T.badLogin;
+      return LANG === "fr" ? T.badLogin : T.badLogin + " — Identifiant ou mot de passe incorrect.";
     if (c.includes("too-many-requests")) return "Trop d'essais. Attendez quelques minutes.";
     if (c.includes("permission-denied")) return "Accès refusé.";
     return "Erreur : " + ((e && e.message) || "inconnue");
@@ -364,7 +398,7 @@
   $("btnLogin").onclick = () => {
     const id = $("lUser").value, pw = $("lPw").value;
     $("lErr").textContent = "";
-    if (!id.trim() || !pw) { $("lErr").textContent = "ߌ ߕߐ߮ + ߕߊ߬ߡߌ߲߬ߞߎߡߊ"; return; }
+    if (!id.trim() || !pw) { $("lErr").textContent = T.needBoth; return; }
     $("btnLogin").disabled = true;
     auth.signInWithEmailAndPassword(emailFor(id), pw)
       .then(() => memo.save(id.trim().toLowerCase(), pw))
@@ -400,7 +434,7 @@
   };
 
   $("btnLogout").onclick = () => {
-    if (!confirm("ߓߐ߫ ؟\n(Se déconnecter ? Il faudra retaper l'identifiant et le mot de passe. Pour simplement quitter, fermez l'application.)")) return;
+    if (!confirm(T.logout + " ؟\n(Se déconnecter ? Il faudra retaper l'identifiant et le mot de passe. Pour simplement quitter, fermez l'application.)")) return;
     memo.forget();
     releaseLock().finally(() => auth.signOut());
   };
@@ -581,7 +615,7 @@
 
   // ---------- Export ----------
   $("btnExport").onclick = () => {
-    const m = modal("<h3>" + "ߞߊ߬ߝߊ ߟߊߓߐ߫" + " — " + esc(book.title) + "</h3>" +
+    const m = modal("<h3>" + T.exportT + " — " + esc(book.title) + "</h3>" +
       '<button id="xWord" class="btn" style="margin-bottom:8px">📄 Word (.doc)</button>' +
       '<button id="xPdf" class="btn secondary" style="margin-bottom:8px">📕 PDF</button>' +
       '<button id="xNo" class="btn secondary">' + T.close + '</button>');
