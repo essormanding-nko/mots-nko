@@ -535,7 +535,7 @@
         const pend = ch.deleteRequested === true;
         const c = document.createElement("div");
         c.className = "card" + (pend ? " pending" : "");
-        let acts = '<button data-a="open">' + T.open + "</button>" +
+        let acts = '<button data-a="open">' + T.open + "</button>" + '<button data-a="copy">📋 ' + (LANG === "fr" ? "Copier" : "ߡߊ߬ߞߟߏ߲߫") + "</button>" +
           (i > 0 ? '<button data-a="up">↑</button>' : "") +
           (i < chapters.length - 1 ? '<button data-a="down">↓</button>' : "");
         if (isOwner()) {
@@ -556,6 +556,7 @@
         const chDoc = bookRef.collection("chapters").doc(ch.id);
         const noReq = { deleteRequested: false, deleteRequestedBy: null, deleteRequestedUid: null, deleteRequestedAt: null };
         q("open").onclick = () => openEditor(ch.id);
+        q("copy").onclick = () => copyText(partLabel(chapters, i) + (ch.title ? " : " + ch.title : "") + "\n\n" + plain(ch.text), "✅");
         if (q("up")) q("up").onclick = () => swap(i, i - 1);
         if (q("down")) q("down").onclick = () => swap(i, i + 1);
         if (q("ask")) q("ask").onclick = () => {
@@ -613,12 +614,48 @@
     };
   };
 
+  // ---------- Copie du texte (Unicode exact, sans passer par le PDF) ----------
+  function copyText(text, okMsg) {
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+      let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+      ta.remove();
+      if (ok) toast(okMsg); else showText(text);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(okMsg)).catch(fallback);
+    else fallback();
+  }
+  function showText(text) {
+    const m = modal("<h3>Sélectionnez puis copiez</h3><textarea id='cpT' class='field nko' dir='rtl' style='height:50vh'></textarea><button id='cpX' class='btn secondary'>" + T.close + "</button>");
+    m.querySelector("#cpT").value = text; m.querySelector("#cpT").select(); m.querySelector("#cpX").onclick = closeModal;
+  }
+  const plain = (t) => String(t || "").replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").trim();
+  async function bookPlainText() {
+    const snap = await db.collection("atelier_books").doc(book.id).collection("chapters").orderBy("order", "asc").get();
+    const parts = snap.docs.map((d) => d.data());
+    return book.title + "\n\n" + parts.map((c, i) =>
+      partLabel(parts, i) + (c.title ? " : " + c.title : "") + "\n\n" + plain(c.text)).join("\n\n\n");
+  }
+
   // ---------- Export ----------
   $("btnExport").onclick = () => {
     const m = modal("<h3>" + T.exportT + " — " + esc(book.title) + "</h3>" +
       '<button id="xWord" class="btn" style="margin-bottom:8px">📄 Word (.doc)</button>' +
-      '<button id="xPdf" class="btn secondary" style="margin-bottom:8px">📕 PDF</button>' +
+      '<button id="xCopy" class="btn" style="margin-bottom:8px">📋 ' + (LANG === "fr" ? "Copier tout le texte" : "ߡߊ߬ߞߟߏ߲߫ ߞߊ߲߫") + '</button>' +
+      '<button id="xTxt" class="btn secondary" style="margin-bottom:8px">🔤 Texte (.txt)</button>' +
+      '<button id="xPdf" class="btn secondary" style="margin-bottom:8px">📕 PDF (lecture)</button>' +
+      '<div class="info" style="margin-bottom:8px">Pour envoyer à une autre IA ou corriger : utilisez « Copier » ou Word / .txt. Le PDF sert à lire et imprimer.</div>' +
       '<button id="xNo" class="btn secondary">' + T.close + '</button>');
+    m.querySelector("#xCopy").onclick = async () => { closeModal(); copyText(await bookPlainText(), "Livre copié ✅"); };
+    m.querySelector("#xTxt").onclick = async () => {
+      closeModal();
+      const txt = await bookPlainText(), fname = book.title.replace(/[\\/:*?"<>|]+/g, "_");
+      if (window.MKLDApp) window.MKLDApp.saveFile(fname + ".txt", btoa(unescape(encodeURIComponent("\ufeff" + txt))), "text/plain");
+      else { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff", txt], { type: "text/plain;charset=utf-8" })); a.download = fname + ".txt"; document.body.appendChild(a); a.click(); a.remove(); }
+    };
     m.querySelector("#xNo").onclick = closeModal;
     m.querySelector("#xWord").onclick = () => { closeModal(); exportBook("word"); };
     m.querySelector("#xPdf").onclick = () => { closeModal(); exportBook("pdf"); };
