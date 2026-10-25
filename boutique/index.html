@@ -183,10 +183,16 @@
   let booksCache = {};          // id -> données du livre
   let readerCleanup = null;
 
-  function price(b) {
-    if (!b.prix) return "Gratuit";
-    return Number(b.prix).toLocaleString("fr-FR") + " " + (config.devise || "GNF");
+  const money = (n) => Number(n || 0).toLocaleString("fr-FR") + " " + (config.devise || "GNF");
+  function price(b) { return b.prix ? money(b.prix) : "Gratuit"; }
+  const isDigital = (b) => b.numerique !== false && (b.sommaire || []).length > 0;
+  function shelfPrice(b) {
+    const out = [];
+    if (isDigital(b)) out.push((b.papier ? "📱 " : "") + price(b));
+    if (b.papier) out.push("📦 " + money(b.prixPapier));
+    return out.join(" · ");
   }
+  const ORDER_STATUS = { nouvelle: ["⏳ Reçue", "wait"], confirmee: ["✔ Confirmée", ""], expediee: ["🚚 En route", ""], livree: ["✅ Livrée", ""], annulee: ["Annulée", "no"] };
   function coverHTML(b) {
     const lang = b.langue || "fr";
     return '<div class="cover">' + (b.couverture ? '<img alt="" src="' + esc(b.couverture) + '">' :
@@ -239,6 +245,7 @@
     if (v === "livre" && p[1]) return viewBook(p[1]);
     if (v === "lire" && p[1]) return viewReader(p[1], parseInt(p[2] || "0", 10) || 0);
     if (v === "acheter" && p[1]) return viewBuy(p[1]);
+    if (v === "commander" && p[1]) return viewOrder(p[1]);
     if (v === "biblio") return viewLibrary();
     if (v === "connexion") return viewLogin(p[1] || "");
     if (v === "compte") return viewAccount();
@@ -277,7 +284,7 @@
 
   // ---------- Vitrine ----------
   async function viewHome() {
-    app.innerHTML = '<h2 class="title">Nos livres</h2><p class="muted">Lisez un extrait gratuit, achetez, et le livre s\'ouvre dans votre bibliothèque.</p><div class="grid" id="grid"><p class="muted">Chargement…</p></div>' +
+    app.innerHTML = '<h2 class="title">Nos livres</h2><p class="muted">Lisez en ligne sur votre téléphone 📱, ou commandez le livre papier 📦.</p><div class="grid" id="grid"><p class="muted">Chargement…</p></div>' +
       '<div class="foot">ESSOR MANDING <span class="nko">ߒߞߏ</span> · <span class="nko">ߒߞߏ ߦߋ߫ ߛߌߣߌ߲ ߠߋ߬ ߘߌ߫</span></div>';
     try {
       const snap = await db.collection("boutique_livres").where("publie", "==", true).get();
@@ -289,7 +296,7 @@
       list.forEach((b) => {
         const el = document.createElement("div"); el.className = "book";
         el.innerHTML = coverHTML(b) + '<div class="meta"><div class="t" lang="' + esc(b.langue || "fr") + '">' + esc(b.titre) + '</div><div class="p">' +
-          (owned.has(b.id) ? "✅ Dans vos livres" : esc(price(b))) + '</div><div class="muted">' + esc(LANGS[b.langue] || "") + "</div></div>";
+          (owned.has(b.id) ? "✅ Dans vos livres" : esc(shelfPrice(b))) + '</div><div class="muted">' + esc(LANGS[b.langue] || "") + "</div></div>";
         el.onclick = () => go("#/livre/" + b.id);
         g.appendChild(el);
       });
@@ -302,7 +309,8 @@
     let b; try { b = await getBook(id); } catch (e) { app.innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; return; }
     if (!b) { app.innerHTML = '<p class="err">Ce livre n\'existe pas ou n\'est plus en vente.</p>'; return; }
     const has = owned.has(id) || isOwner();
-    const sommaire = b.sommaire || [];
+    const digital = isDigital(b);
+    const sommaire = digital ? (b.sommaire || []) : [];
     const dir = (b.langue === "nqo" || b.langue === "ar") ? "rtl" : "ltr";
     let pending = null;
     if (auth.currentUser && !has) {
@@ -314,16 +322,27 @@
     app.innerHTML =
       '<div class="hero">' + coverHTML(b) + '<div class="info">' +
         '<h2 class="title" lang="' + esc(b.langue || "fr") + '" dir="' + dir + '" style="margin-top:0">' + esc(b.titre) + "</h2>" +
-        '<div class="muted"><span lang="nqo">' + esc(b.auteur || DEFAULT_AUTHOR) + "</span> · " + esc(LANGS[b.langue] || "") + " · " + sommaire.length + " parties</div>" +
-        '<div class="price">' + (has ? "✅ Vous avez ce livre" : esc(price(b))) + "</div>" +
+        '<div class="muted"><span lang="nqo">' + esc(b.auteur || DEFAULT_AUTHOR) + "</span> · " + esc(LANGS[b.langue] || "") + (digital ? " · " + sommaire.length + " parties" : "") + "</div>" +
+        (digital ? '<div class="price">' + (has ? "✅ Vous avez ce livre" : (b.papier ? '<span style="font-size:15px;color:var(--soft)">Version numérique :</span> ' : "") + esc(price(b))) + "</div>" +
         '<div class="row">' +
           (has ? '<button class="btn" id="bRead">📖 Lire</button>' :
-            (pending ? '<span class="chip wait">⏳ Paiement en cours de vérification</span>' : '<button class="btn" id="bBuy">' + (b.prix ? "Acheter" : "Ajouter à mes livres") + "</button>") +
+            (pending ? '<span class="chip wait">⏳ Paiement en cours de vérification</span>' : '<button class="btn" id="bBuy">' + (b.prix ? "Acheter et lire en ligne" : "Ajouter à mes livres") + "</button>") +
             ((b.gratuits || 0) > 0 ? '<button class="btn alt" id="bSample">Lire l\'extrait gratuit</button>' : "")) +
-        "</div>" +
+        "</div>" : "") +
+        (b.papier ? '<div class="price" style="margin-top:14px">' + (digital ? '<span style="font-size:15px;color:var(--soft)">Livre papier :</span> ' : "📦 ") + esc(money(b.prixPapier)) + "</div>" +
+          (b.infoPapier ? '<div class="muted">' + esc(b.infoPapier) + "</div>" : "") +
+          '<div class="row" style="margin-top:8px"><button class="btn gold" id="bOrder">📦 Commander le livre papier</button></div>' : "") +
       "</div></div>" +
+      ((b.apercu || []).length ? '<h3>Aperçu</h3><div class="row" id="apercu" style="gap:10px"></div>' : "") +
       (b.description ? '<div class="card desc" lang="' + esc(b.langueDescription || "fr") + '">' + esc(b.description) + "</div>" : "") +
-      '<h3>Sommaire</h3><ul class="toc" id="toc" dir="' + dir + '" lang="' + esc(b.langue || "fr") + '"></ul>';
+      (digital ? '<h3>Sommaire</h3><ul class="toc" id="toc" dir="' + dir + '" lang="' + esc(b.langue || "fr") + '"></ul>' : "");
+    (b.apercu || []).forEach((src) => {
+      const im = document.createElement("img"); im.src = src; im.alt = "";
+      im.style.cssText = "width:30%;max-width:150px;border:1px solid var(--line);border-radius:8px;cursor:zoom-in";
+      im.onclick = () => { const d = document.createElement("div"); d.className = "drawer"; d.style.alignItems = "center"; d.style.justifyContent = "center";
+        d.innerHTML = '<img src="' + esc(src) + '" alt="" style="max-width:96vw;max-height:94vh;background:#fff">'; d.onclick = () => d.remove(); document.body.appendChild(d); };
+      $("apercu").appendChild(im);
+    });
     const toc = $("toc");
     sommaire.forEach((s, i) => {
       const free = i < (b.gratuits || 0);
@@ -336,6 +355,54 @@
     if ($("bRead")) $("bRead").onclick = () => go("#/lire/" + id + "/" + lastPos(id));
     if ($("bSample")) $("bSample").onclick = () => go("#/lire/" + id + "/0");
     if ($("bBuy")) $("bBuy").onclick = () => go(auth.currentUser ? "#/acheter/" + id : "#/connexion/" + id);
+    if ($("bOrder")) $("bOrder").onclick = () => go(auth.currentUser ? "#/commander/" + id : "#/connexion/" + id + "~c");
+  }
+
+  // ---------- Commande du livre papier ----------
+  async function viewOrder(id) {
+    if (!auth.currentUser) return go("#/connexion/" + id + "~c");
+    const b = await getBook(id).catch(() => null);
+    if (!b || !b.papier) { app.innerHTML = '<p class="err">Ce livre n\'est pas vendu en papier.</p>'; return; }
+    const pays = [];
+    if (config.orange) pays.push("Orange Money : <b class='num'>" + esc(config.orange) + "</b>");
+    if (config.mtn) pays.push("MTN Mobile Money : <b class='num'>" + esc(config.mtn) + "</b>");
+    app.innerHTML =
+      '<h2 class="title">📦 Commander « <span lang="' + esc(b.langue || "fr") + '">' + esc(b.titre) + "</span> »</h2>" +
+      '<div class="card">' +
+        '<label>Nombre d\'exemplaires</label><input class="field" id="oQ" type="number" min="1" max="50" value="1">' +
+        '<div class="price" id="oTot"></div>' +
+        (config.infosLivraison ? '<div class="pay" style="margin-top:0">🚚 ' + esc(config.infosLivraison) + "</div>" : "") +
+        '<label>Nom et prénom</label><input class="field" id="oN" value="' + esc((client && client.nom) || "") + '">' +
+        '<label>Téléphone pour la livraison</label><input class="field" id="oT" inputmode="tel" value="' + esc((client && client.telephone) || "") + '">' +
+        '<label>Ville</label><input class="field" id="oV" placeholder="Conakry, Kankan, Kissidougou…">' +
+        '<label>Quartier, adresse, point de repère</label><textarea class="field" id="oA" rows="2"></textarea>' +
+        '<label>Paiement</label><select class="field" id="oP"><option value="mobile">Mobile Money maintenant</option>' +
+          (config.paiementLivraison ? '<option value="livraison">À la livraison</option>' : "") + "</select>" +
+        '<div id="oMM"><div class="pay" style="margin-top:0">Envoyez le total à :<br>' + (pays.join("<br>") || "<i>Numéro bientôt disponible.</i>") +
+          (config.nomCompte ? "<br>Au nom de : <b>" + esc(config.nomCompte) + "</b>" : "") + "</div>" +
+          '<label>Numéro qui a envoyé l\'argent</label><input class="field" id="oFrom" inputmode="tel" value="' + esc((client && client.telephone) || "") + '">' +
+          '<label>Référence de la transaction (SMS)</label><input class="field" id="oRef"></div>' +
+        '<div class="err" id="oErr"></div><button class="btn block gold" id="oGo">Envoyer ma commande</button></div>';
+    const tot = () => { const q = Math.max(1, parseInt($("oQ").value || "1", 10)); $("oTot").textContent = "Total : " + money(q * (b.prixPapier || 0)); return q; };
+    tot(); $("oQ").oninput = tot;
+    const mm = () => $("oMM").classList.toggle("hidden", $("oP").value !== "mobile");
+    mm(); $("oP").onchange = mm;
+    $("oGo").onclick = async () => {
+      const q = tot(), nom = $("oN").value.trim(), tel = $("oT").value.trim(), ville = $("oV").value.trim(), adr = $("oA").value.trim(), pay = $("oP").value;
+      const ref = $("oRef").value.trim(), from = $("oFrom").value.trim();
+      if (!nom || digits(tel).length < 8 || !ville || !adr) { $("oErr").textContent = "Nom, téléphone, ville et adresse sont nécessaires pour la livraison."; return; }
+      if (pay === "mobile" && (!ref || digits(from).length < 8)) { $("oErr").textContent = "Indiquez le numéro qui a payé et la référence du SMS."; return; }
+      $("oGo").disabled = true;
+      try {
+        await db.collection("boutique_commandes").add({
+          uid: auth.currentUser.uid, livre: id, titre: b.titre, quantite: q, prixUnitaire: b.prixPapier || 0, total: q * (b.prixPapier || 0), devise: config.devise || "GNF",
+          nom, telephone: tel, ville, adresse: adr, paiement: pay, reference: pay === "mobile" ? ref : "", expediteur: pay === "mobile" ? from : "",
+          statut: "nouvelle", at: TS()
+        });
+        app.innerHTML = '<div class="card center"><p class="ok" style="font-size:19px">✅ Commande envoyée !</p><p>Nous vous appelons au ' + esc(tel) + ' pour confirmer la livraison. Suivez votre commande dans « Mes livres ».</p><button class="btn" id="bBack">Retour</button></div>';
+        $("bBack").onclick = () => go("#/biblio");
+      } catch (e) { $("oErr").textContent = errText(e); $("oGo").disabled = false; }
+    };
   }
 
   // ---------- Achat (Mobile Money, vérifié à la main) ----------
@@ -386,9 +453,16 @@
   // ---------- Bibliothèque ----------
   async function viewLibrary() {
     if (!auth.currentUser) return go("#/connexion");
-    app.innerHTML = '<h2 class="title">📚 Mes livres</h2><div class="grid" id="grid"></div><div id="waits"></div>';
+    app.innerHTML = '<h2 class="title">📚 Mes livres</h2><div class="grid" id="grid"></div><div id="waits"></div><div id="orders"></div>';
+    db.collection("boutique_commandes").where("uid", "==", auth.currentUser.uid).get().then((q) => {
+      const o = q.docs.map((d) => d.data()).sort((a, b) => ms(b.at) - ms(a.at));
+      if (o.length && $("orders")) $("orders").innerHTML = "<h3>📦 Mes commandes de livres papier</h3>" + o.map((d) => {
+        const st = ORDER_STATUS[d.statut] || ORDER_STATUS.nouvelle;
+        return '<div class="card"><b>' + esc(d.titre) + "</b> × " + d.quantite + " — " + esc(money(d.total)) + '<br><span class="chip ' + st[1] + '">' + st[0] + '</span> <span class="muted">' + fmtDate(d.at) + "</span></div>";
+      }).join("");
+    }).catch(() => {});
     const g = $("grid");
-    if (!owned.size) g.innerHTML = '<p class="muted">Vous n\'avez pas encore de livre. <a href="#/">Voir la librairie</a>.</p>';
+    if (!owned.size) g.innerHTML = '<p class="muted">Aucun livre numérique pour l\'instant. <a href="#/">Voir la librairie</a>.</p>';
     for (const id of owned) {
       const b = await getBook(id).catch(() => null);
       if (!b) continue;
@@ -489,7 +563,7 @@
 
   // ---------- Connexion / inscription ----------
   function viewLogin(next) {
-    if (auth.currentUser) return go(next ? "#/livre/" + next : "#/");
+    if (auth.currentUser) return go(next ? "#/livre/" + next.replace(/~c$/, "") : "#/");
     let mode = "in";
     const draw = () => {
       app.innerHTML = '<div style="max-width:420px;margin:10px auto">' +
@@ -514,7 +588,7 @@
             const cred = await auth.createUserWithEmailAndPassword(email, pw);
             await db.collection("boutique_clients").doc(cred.user.uid).set({ nom: name, telephone: tel, createdAt: TS() });
           }
-          if (next) location.hash = "#/livre/" + next; else location.hash = "#/";
+          if (next) location.hash = next.endsWith("~c") ? "#/commander/" + next.slice(0, -2) : "#/livre/" + next; else location.hash = "#/";
         } catch (e) { $("lErr").textContent = errText(e); $("lGo").disabled = false; }
       };
     };
@@ -539,7 +613,7 @@
       $("oGo").onclick = () => auth.signInWithEmailAndPassword(OWNER_EMAIL, $("oPw").value).then(() => go("#/admin")).catch((e) => { $("oErr").textContent = errText(e); });
       return;
     }
-    const tabs = { demandes: "💰 Demandes", livres: "📚 Livres en vente", publier: "⬆ Publier", offrir: "🎁 Offrir", reglages: "⚙ Réglages" };
+    const tabs = { demandes: "💰 Demandes", commandes: "📦 Commandes", livres: "📚 Livres en vente", publier: "⬆ Publier", offrir: "🎁 Offrir", reglages: "⚙ Réglages" };
     app.innerHTML = '<h2 class="title">Gestion de la librairie</h2><div class="tabs">' +
       Object.keys(tabs).map((k) => '<button data-t="' + k + '" class="' + (k === tab ? "on" : "") + '">' + tabs[k] + "</button>").join("") +
       '<button id="admOut">Se déconnecter</button></div><div id="adm"></div>';
@@ -547,6 +621,7 @@
     $("admOut").onclick = () => auth.signOut().then(() => go("#/"));
     const box = $("adm");
     if (tab === "demandes") return admRequests(box);
+    if (tab === "commandes") return admOrders(box, false);
     if (tab === "livres") return admBooks(box);
     if (tab === "publier") return admPublish(box);
     if (tab === "offrir") return admGift(box);
@@ -587,6 +662,35 @@
     readerCleanup = unsub;
   }
 
+  async function admOrders(box, all) {
+    box.innerHTML = '<div class="row" style="margin-bottom:10px"><button class="btn sm alt" id="oAll">' + (all ? "Voir seulement les commandes en cours" : "Voir aussi les commandes terminées") + '</button></div><div id="ol">Chargement…</div>';
+    $("oAll").onclick = () => admOrders(box, !all);
+    try {
+      const snap = await db.collection("boutique_commandes").get();
+      let list = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(b.at) - ms(a.at));
+      if (!all) list = list.filter((d) => d.statut !== "livree" && d.statut !== "annulee");
+      const ol = $("ol"); if (!ol) return;
+      if (!list.length) { ol.innerHTML = '<p class="ok">Aucune commande en cours.</p>'; return; }
+      ol.innerHTML = "";
+      const next = { nouvelle: ["confirmee", "✔ Confirmer"], confirmee: ["expediee", "🚚 Expédiée"], expediee: ["livree", "✅ Livrée"] };
+      list.forEach((d) => {
+        const st = ORDER_STATUS[d.statut] || ORDER_STATUS.nouvelle;
+        const c = document.createElement("div"); c.className = "card";
+        c.innerHTML = '<div class="row" style="justify-content:space-between"><b>' + esc(d.titre) + " × " + d.quantite + '</b><span class="chip ' + st[1] + '">' + st[0] + "</span></div>" +
+          "Total : <b>" + esc(money(d.total)) + "</b> · " + (d.paiement === "mobile" ? "Mobile Money depuis <b>" + esc(d.expediteur) + "</b>, réf. <b>" + esc(d.reference) + "</b>" : "<b>Paiement à la livraison</b>") +
+          "<br>" + esc(d.nom) + " · " + esc(d.telephone) + "<br>📍 " + esc(d.ville) + " — " + esc(d.adresse) +
+          '<br><span class="muted">' + fmtDate(d.at) + "</span>" +
+          '<div class="row" style="margin-top:10px">' + (next[d.statut] ? '<button class="btn sm" data-a="next">' + next[d.statut][1] + "</button>" : "") +
+          (d.statut !== "livree" && d.statut !== "annulee" ? '<button class="btn sm red" data-a="cancel">Annuler</button>' : "") +
+          '<a class="btn sm alt" target="_blank" rel="noopener" href="https://wa.me/' + esc(digits(d.telephone)) + '">WhatsApp</a></div>';
+        const upd = (statut) => db.collection("boutique_commandes").doc(d.id).update({ statut, majLe: TS() }).then(() => admOrders(box, all)).catch((e) => toast(errText(e)));
+        if (c.querySelector('[data-a="next"]')) c.querySelector('[data-a="next"]').onclick = () => upd(next[d.statut][0]);
+        if (c.querySelector('[data-a="cancel"]')) c.querySelector('[data-a="cancel"]').onclick = () => { if (confirm("Annuler cette commande ?")) upd("annulee"); };
+        ol.appendChild(c);
+      });
+    } catch (e) { $("ol").innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; }
+  }
+
   async function admBooks(box) {
     box.innerHTML = "Chargement…";
     try {
@@ -599,7 +703,7 @@
         const c = document.createElement("div"); c.className = "card";
         c.innerHTML = '<div class="row" style="justify-content:space-between"><b lang="' + esc(b.langue) + '">' + esc(b.titre) + "</b>" +
           (b.publie ? '<span class="chip">En vente</span>' : '<span class="chip wait">Masqué</span>') + "</div>" +
-          '<div class="muted">' + (b.sommaire || []).length + " parties · " + (b.gratuits || 0) + " gratuites · " + esc(price(b)) + "</div>" +
+          '<div class="muted">' + (isDigital(b) ? (b.sommaire || []).length + " parties · " + (b.gratuits || 0) + " gratuites · " : "Papier seulement · ") + esc(shelfPrice(b)) + "</div>" +
           '<div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="edit">Modifier</button><button class="btn sm alt" data-a="see">Voir</button>' +
           '<button class="btn sm ' + (b.publie ? "red" : "") + '" data-a="pub">' + (b.publie ? "Retirer de la vente" : "Mettre en vente") + "</button></div>";
         c.querySelector('[data-a="see"]').onclick = () => go("#/livre/" + b.id);
@@ -618,8 +722,18 @@
       '<label>Auteur</label><input class="field" id="fA" lang="nqo" value="' + esc(b.auteur || DEFAULT_AUTHOR) + '">' +
       '<label>Langue du livre</label><select class="field" id="fL">' + Object.keys(LANGS).map((k) => '<option value="' + k + '"' + ((b.langue || "fr") === k ? " selected" : "") + ">" + LANGS[k] + "</option>").join("") + "</select>" +
       '<label>Présentation (affichée sur la fiche du livre)</label><textarea class="field" id="fD" rows="5">' + esc(b.description || "") + "</textarea>" +
-      '<label>Prix (0 = gratuit)</label><input class="field" id="fP" inputmode="numeric" value="' + esc(b.prix || 0) + '">' +
-      '<label>Nombre de parties gratuites (l\'extrait)</label><input class="field" id="fG" inputmode="numeric" value="' + esc(b.gratuits == null ? 2 : b.gratuits) + '">' +
+      '<div class="card" style="background:#fff">' +
+        '<label style="display:block;margin-bottom:8px"><input type="checkbox" id="fNum"' + ((parts || isDigital(b)) && b.numerique !== false ? " checked" : "") + (parts || (b.sommaire || []).length ? "" : " disabled") + '> 📱 Version numérique (lecture en ligne)</label>' +
+        '<label>Prix numérique (0 = gratuit)</label><input class="field" id="fP" inputmode="numeric" value="' + esc(b.prix || 0) + '">' +
+        '<label>Nombre de parties gratuites (l\'extrait)</label><input class="field" id="fG" inputmode="numeric" value="' + esc(b.gratuits == null ? 2 : b.gratuits) + '">' +
+      "</div>" +
+      '<div class="card" style="background:#fff">' +
+        '<label style="display:block;margin-bottom:8px"><input type="checkbox" id="fPap"' + (b.papier ? " checked" : "") + "> 📦 Livre papier (commande et livraison)</label>" +
+        '<label>Prix du livre papier</label><input class="field" id="fPP" inputmode="numeric" value="' + esc(b.prixPapier || 0) + '">' +
+        '<label>Précision (format, nombre de pages…)</label><input class="field" id="fIP" value="' + esc(b.infoPapier || "") + '" placeholder="Ex. : format A4, 108 pages, couverture couleur">' +
+      "</div>" +
+      '<label>Pages d\'aperçu (jusqu\'à 4 images, facultatif)</label><input class="field" id="fAp" type="file" accept="image/*" multiple>' +
+      '<div class="row" id="fApV"></div>' +
       '<label>Ordre dans la vitrine (1 = en premier)</label><input class="field" id="fO" inputmode="numeric" value="' + esc(b.ordre || 1) + '">' +
       '<label>Couverture (image, facultatif)</label><input class="field" id="fC" type="file" accept="image/*">' +
       (b.couverture ? '<img src="' + esc(b.couverture) + '" style="width:90px;border-radius:6px" alt="">' : "") +
@@ -627,6 +741,14 @@
       (parts ? '<p class="muted">' + parts.length + " parties seront publiées.</p>" : "") +
       '<div class="err" id="fErr"></div><button class="btn block" id="fGo">' + (parts ? "Publier" : "Enregistrer") + "</button></div>";
     let cover = b.couverture || "";
+    let apercu = (b.apercu || []).slice();
+    const drawAp = () => { $("fApV").innerHTML = apercu.map((u, i) => '<span style="position:relative"><img src="' + esc(u) + '" style="width:70px;border-radius:6px" alt=""><button data-i="' + i + '" style="position:absolute;top:-6px;right:-6px;border-radius:50%;border:0;background:#B3261E;color:#fff">×</button></span>').join("");
+      $("fApV").querySelectorAll("button").forEach((x) => { x.onclick = () => { apercu.splice(+x.dataset.i, 1); drawAp(); }; }); };
+    drawAp();
+    $("fAp").onchange = async (ev) => {
+      for (const f of Array.from(ev.target.files).slice(0, 4 - apercu.length)) { try { apercu.push(await shrinkImage(f, 900)); } catch (e) {} }
+      drawAp();
+    };
     $("fC").onchange = (ev) => { const f = ev.target.files[0]; if (f) shrinkImage(f).then((u) => { cover = u; toast("Couverture prête."); }).catch(() => toast("Image illisible.")); };
     $("fGo").onclick = async () => {
       const titre = $("fT").value.trim(); if (!titre) { $("fErr").textContent = "Le titre est obligatoire."; return; }
@@ -634,8 +756,11 @@
       const data = {
         titre, auteur: $("fA").value.trim(), langue: $("fL").value, description: $("fD").value.trim(),
         prix: Math.max(0, parseInt(digits($("fP").value) || "0", 10)), gratuits: Math.max(0, parseInt(digits($("fG").value) || "0", 10)),
-        ordre: parseInt(digits($("fO").value) || "1", 10), couverture: cover, publie: $("fV").checked, majLe: TS()
+        ordre: parseInt(digits($("fO").value) || "1", 10), couverture: cover, publie: $("fV").checked, majLe: TS(),
+        numerique: $("fNum").checked, papier: $("fPap").checked, prixPapier: Math.max(0, parseInt(digits($("fPP").value) || "0", 10)),
+        infoPapier: $("fIP").value.trim(), apercu
       };
+      if (!data.numerique && !data.papier) { $("fErr").textContent = "Cochez au moins une version : numérique ou papier."; $("fGo").disabled = false; $("fGo").textContent = parts ? "Publier" : "Enregistrer"; return; }
       try {
         const id = b.id || db.collection("boutique_livres").doc().id;
         const ref = db.collection("boutique_livres").doc(id);
@@ -666,11 +791,11 @@
     };
   }
 
-  function shrinkImage(file) {
+  function shrinkImage(file, width) {
     return new Promise((res, rej) => {
       const img = new Image(); const url = URL.createObjectURL(file);
       img.onload = () => {
-        const w = 600, h = Math.round(img.height * (w / img.width));
+        const w = Math.min(width || 600, img.width), h = Math.round(img.height * (w / img.width));
         const c = document.createElement("canvas"); c.width = w; c.height = h;
         c.getContext("2d").drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
         res(c.toDataURL("image/jpeg", 0.78));
@@ -689,6 +814,7 @@
   }
   async function admPublish(box) {
     box.innerHTML = '<div class="card"><h3 style="margin-top:0">Depuis l\'atelier d\'écriture</h3><div id="atl">Chargement…</div></div>' +
+      '<div class="card"><h3 style="margin-top:0">📦 Livre papier seulement</h3><p class="muted">Pour un livre vendu uniquement en version imprimée (fiche, prix, aperçu, commande).</p><button class="btn sm" id="newPaper">Créer la fiche</button></div>' +
       '<div class="card"><h3 style="margin-top:0">Depuis un fichier texte (.txt ou .md)</h3>' +
       '<p class="muted">Chaque ligne qui commence par « # » ou « ## » ouvre une nouvelle partie. Sans titres, une ligne « Chapitre 3 : … » ou « Préface : … » marque aussi une partie.</p>' +
       '<input class="field" type="file" id="txtFile" accept=".txt,.md,text/plain,text/markdown"></div>';
@@ -716,6 +842,7 @@
         atl.appendChild(row);
       });
     } catch (e) { $("atl").innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; }
+    $("newPaper").onclick = () => { bookForm(box, { langue: "fr", papier: true, numerique: false, gratuits: 0 }, null, "Nouveau livre papier."); };
     $("txtFile").onchange = (ev) => {
       const f = ev.target.files[0]; if (!f) return;
       const r = new FileReader();
@@ -782,9 +909,11 @@
       '<label>Nom affiché pour le compte qui reçoit</label><input class="field" id="sNm" value="' + esc(config.nomCompte || "ESSOR MANDING") + '">' +
       '<label>Numéro WhatsApp du service client</label><input class="field" id="sWa" inputmode="tel" value="' + esc(config.whatsapp || "") + '">' +
       '<label>Consigne de paiement (facultatif)</label><textarea class="field" id="sCo" rows="3">' + esc(config.consigne || "") + "</textarea>" +
+      '<label>Livraison des livres papier (villes, délais, frais)</label><textarea class="field" id="sLi" rows="3" placeholder="Ex. : livraison à Conakry, Kankan et Kissidougou sous 3 à 5 jours. Frais de livraison à payer au livreur.">' + esc(config.infosLivraison || "") + "</textarea>" +
+      '<label style="display:block;margin-bottom:12px"><input type="checkbox" id="sPL"' + (config.paiementLivraison ? " checked" : "") + "> Accepter le paiement à la livraison</label>" +
       '<button class="btn block" id="sGo">Enregistrer</button></div>';
     $("sGo").onclick = async () => {
-      const c = { devise: $("sDev").value.trim() || "GNF", orange: $("sOr").value.trim(), mtn: $("sMt").value.trim(), nomCompte: $("sNm").value.trim(), whatsapp: $("sWa").value.trim(), consigne: $("sCo").value.trim() };
+      const c = { devise: $("sDev").value.trim() || "GNF", orange: $("sOr").value.trim(), mtn: $("sMt").value.trim(), nomCompte: $("sNm").value.trim(), whatsapp: $("sWa").value.trim(), consigne: $("sCo").value.trim(), infosLivraison: $("sLi").value.trim(), paiementLivraison: $("sPL").checked };
       try { await db.collection("boutique_config").doc("public").set(c); Object.assign(config, c); toast("Réglages enregistrés ✔"); } catch (e) { toast(errText(e)); }
     };
   }
