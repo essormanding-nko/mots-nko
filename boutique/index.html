@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B5D3B">
+<title>Librairie ESSOR MANDING ߒߞߏ</title>
+<meta name="description" content="Les livres d'ESSOR MANDING ߒߞߏ : achetez et lisez directement sur votre téléphone.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230B5D3B'/%3E%3Cpath d='M14 18h16a4 4 0 0 1 4 4v26a3 3 0 0 0-3-3H14zM50 18H34a4 4 0 0 0-4 4v26a3 3 0 0 1 3-3h17z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+NKo&family=Noto+Naskh+Arabic:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #0B5D3B; --brand2: #0F7A4E; --gold: #9A6B00; --red: #B3261E;
+    --bg: #FFFFFF; --surface: #F3F6F2; --line: #CBD7CC; --text: #111111; --soft: #4A4A4A;
+    --paper: #FFFFFF; --ink: #111111;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Noto Sans NKo", sans-serif; font-size: 17px; }
+  button, input, select, textarea { font: inherit; color: var(--text); }
+  button { cursor: pointer; }
+  .hidden { display: none !important; }
+  .nko { font-family: "Noto Sans NKo", sans-serif; }
+  [lang="nqo"] { font-family: "Noto Sans NKo", sans-serif; }
+  [lang="ar"] { font-family: "Noto Naskh Arabic", serif; }
+
+  header { background: var(--brand); color: #fff; position: sticky; top: 0; z-index: 20;
+    padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top)); display: flex; align-items: center; gap: 10px; }
+  header .brand { flex: 1; min-width: 0; cursor: pointer; }
+  header .brand b { display: block; font-size: 17px; letter-spacing: .3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  header .brand small { display: block; font-size: 12px; opacity: .9; }
+  header button { background: transparent; border: 1.5px solid #fff; color: #fff; border-radius: 8px; padding: 7px 10px; font-size: 14px; flex: none; }
+  main { max-width: 860px; margin: 0 auto; padding: 16px 16px 70px; }
+
+  h2.title { font-size: 23px; color: var(--brand); margin: 6px 0 14px; }
+  .muted { color: var(--soft); font-size: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+  .btn { display: inline-block; padding: 13px 18px; border: 0; border-radius: 10px; background: var(--brand); color: #fff; font-weight: 700; font-size: 16px; text-align: center; text-decoration: none; }
+  .btn.block { display: block; width: 100%; }
+  .btn.alt { background: #fff; color: var(--brand); border: 2px solid var(--brand); }
+  .btn.gold { background: var(--gold); }
+  .btn.red { background: var(--red); }
+  .btn.sm { padding: 8px 12px; font-size: 14px; }
+  .btn:disabled { opacity: .5; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .field { width: 100%; padding: 12px; border: 2px solid var(--line); border-radius: 10px; background: #fff; margin: 4px 0 12px; }
+  .field:focus { outline: none; border-color: var(--brand); }
+  label { font-weight: 700; font-size: 14px; }
+  .err { color: var(--red); font-weight: 600; min-height: 20px; margin: 6px 0; }
+  .ok { color: var(--brand); font-weight: 700; }
+  .chip { display: inline-block; padding: 3px 9px; border-radius: 99px; font-size: 13px; font-weight: 700; background: #E6F0E8; color: var(--brand); }
+  .chip.wait { background: #FFF2D6; color: #7A4F00; }
+  .chip.no { background: #FDE3E1; color: var(--red); }
+
+  /* Vitrine */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+  .book { cursor: pointer; border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid var(--line); display: flex; flex-direction: column; }
+  .book .meta { padding: 9px 10px 11px; }
+  .book .t { font-weight: 800; font-size: 15px; line-height: 1.3; }
+  .book .p { color: var(--brand); font-weight: 800; margin-top: 4px; font-size: 15px; }
+  .cover { aspect-ratio: 2 / 3; width: 100%; display: flex; flex-direction: column; justify-content: space-between;
+    padding: 14px 12px; color: #fff; background: linear-gradient(160deg, var(--brand), #083A26); position: relative; overflow: hidden; }
+  .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cover .ct { font-weight: 800; font-size: 17px; line-height: 1.35; position: relative; }
+  .cover .ca { font-size: 12px; opacity: .92; position: relative; }
+  .cover::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: #E0A800; }
+  .hero { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .hero .cover { width: 160px; flex: none; border-radius: 10px; }
+  .hero .info { flex: 1; min-width: 220px; }
+  .price { font-size: 24px; font-weight: 800; color: var(--brand); margin: 8px 0; }
+  .desc { white-space: pre-wrap; line-height: 1.6; }
+  .toc { list-style: none; padding: 0; margin: 0; }
+  .toc li { padding: 10px 4px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; }
+  .toc li.click { cursor: pointer; }
+  .toc .lock { color: var(--soft); font-size: 13px; flex: none; }
+
+  /* Liseuse */
+  body.reading header { display: none; }
+  body.reading main { max-width: none; padding: 0; }
+  .rbar { position: sticky; top: 0; z-index: 15; background: var(--paper); border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 6px; padding: 8px 10px; padding-top: max(8px, env(safe-area-inset-top)); }
+  .rbar .rt { flex: 1; min-width: 0; font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); }
+  .rbar button { border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 8px; padding: 6px 9px; font-size: 15px; flex: none; }
+  .reader { background: var(--paper); color: var(--ink); min-height: 100vh; position: relative;
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  .page { max-width: 680px; margin: 0 auto; padding: 22px 20px 120px; line-height: 1.75; font-family: "Source Serif 4", Georgia, serif; position: relative; z-index: 1; }
+  .page[lang="nqo"] { font-family: "Noto Sans NKo", sans-serif; line-height: 2.1; }
+  .page[lang="ar"] { font-family: "Noto Naskh Arabic", serif; line-height: 2; }
+  .page h1 { font-size: 1.55em; color: var(--brand); margin: .2em 0 .8em; line-height: 1.35; }
+  .page h2 { font-size: 1.3em; color: var(--brand); margin: 1.4em 0 .6em; line-height: 1.35; }
+  .page h3 { font-size: 1.1em; color: var(--gold); margin: 1.3em 0 .4em; }
+  .page p { margin: 0 0 .9em; }
+  .page ul { margin: 0 0 1em; padding-inline-start: 1.3em; }
+  .page .lab { font-size: .8em; color: var(--soft); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+  .wm { position: fixed; inset: 0; pointer-events: none; z-index: 2; opacity: .09; background-repeat: repeat; }
+  .nav { display: flex; gap: 10px; justify-content: space-between; margin-top: 40px; }
+  .nav .btn { flex: 1; }
+  .endbox { margin-top: 30px; padding: 16px; border: 2px dashed var(--gold); border-radius: 12px; text-align: center; font-family: -apple-system, Roboto, Arial, sans-serif; }
+  .drawer { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 30; display: flex; }
+  .drawer .pane { background: #fff; width: min(360px, 88vw); height: 100%; overflow: auto; padding: 16px; }
+  .drawer .toc li { cursor: pointer; }
+  .drawer .toc li.cur { font-weight: 800; color: var(--brand); }
+  .prog { height: 3px; background: var(--brand); position: fixed; top: 0; left: 0; z-index: 40; width: 0; }
+  body.sepia { --paper: #F8F1E3; --ink: #2A2118; }
+  @media print { body { display: none !important; } }
+
+  /* Admin */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .tabs button { border: 2px solid var(--brand); background: #fff; color: var(--brand); border-radius: 99px; padding: 7px 13px; font-weight: 700; font-size: 14px; }
+  .tabs button.on { background: var(--brand); color: #fff; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  td, th { border-bottom: 1px solid var(--line); padding: 7px 5px; text-align: left; vertical-align: top; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: #111; color: #fff; padding: 11px 16px;
+    border-radius: 10px; z-index: 60; font-size: 15px; max-width: 90vw; }
+  .center { text-align: center; }
+  .pay { background: #FFF8E6; border: 2px solid #E0A800; border-radius: 12px; padding: 14px; margin: 12px 0; }
+  .pay b.num { font-size: 22px; letter-spacing: 1px; }
+  .foot { margin-top: 40px; text-align: center; font-size: 13px; color: var(--soft); }
+</style>
+</head>
+<body>
+<div class="prog" id="prog"></div>
+<header>
+  <div class="brand" id="goHome"><b>ESSOR MANDING <span class="nko">ߒߞߏ</span></b><small>La librairie · <span class="nko">ߞߊ߬ߝߊ߫ ߝߎ߲ߞߊ߬ߙߊ</span></small></div>
+  <button id="btnBib" class="hidden">📚 Mes livres</button>
+  <button id="btnAccount">Se connecter</button>
+</header>
+<main id="app"><p class="muted center">Chargement…</p></main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+  const CONFIG = {
+    apiKey: "AIzaSyDGBAUpCPP8zLwx6aq4j30rHMxJSpAuTpo",
+    authDomain: "prof-polyvalent-bac.firebaseapp.com",
+    projectId: "prof-polyvalent-bac",
+    appId: "1:975283196046:android:b36a6c8ccc4af604ff39df"
+  };
+  const OWNER_EMAIL = "proprio@sebebon.app";      // le même compte propriétaire que l'atelier
+  const CLIENT_DOMAIN = "lecteur.essormanding.app"; // comptes lecteurs : numéro de téléphone + mot de passe
+  const DEFAULT_AUTHOR = "ߡߐߛߊߞߊ߬ߟߎ߫ ߞߐ߲ߘߍ߫";
+  const LANGS = { nqo: "N'Ko", fr: "Français", ar: "Arabe", en: "Anglais" };
+
+  firebase.initializeApp(CONFIG);
+  const auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+  const db = firebase.firestore();
+  try { db.enablePersistence({ synchronizeTabs: true }).catch(() => {}); } catch (e) {}
+  const TS = () => firebase.firestore.FieldValue.serverTimestamp();
+
+  const $ = (id) => document.getElementById(id);
+  const app = $("app");
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+  function toast(msg) {
+    const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+    document.body.appendChild(t); setTimeout(() => t.remove(), 3200);
+  }
+  function errText(e) {
+    const c = (e && e.code) || "";
+    if (c.includes("wrong-password") || c.includes("invalid-credential") || c.includes("user-not-found") || c.includes("invalid-login")) return "Numéro ou mot de passe incorrect.";
+    if (c.includes("email-already-in-use")) return "Ce numéro a déjà un compte. Connectez-vous.";
+    if (c.includes("weak-password")) return "Mot de passe trop court (6 caractères minimum).";
+    if (c.includes("permission-denied")) return "Accès refusé.";
+    if (c.includes("unavailable") || c.includes("network")) return "Pas de connexion Internet.";
+    return "Erreur : " + ((e && e.message) || c || "inconnue");
+  }
+  const digits = (s) => String(s || "").replace(/\D/g, "");
+  const isOwner = () => !!(auth.currentUser && auth.currentUser.email === OWNER_EMAIL);
+  const ms = (ts) => !ts ? 0 : (ts.toMillis ? ts.toMillis() : +ts);
+  const fmtDate = (ts) => { try { const d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString("fr-FR") + " " + d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }); } catch (e) { return ""; } };
+
+  let config = { devise: "GNF", orange: "", mtn: "", whatsapp: "", nomCompte: "", consigne: "" };
+  let client = null;            // profil du lecteur connecté
+  let owned = new Set();        // livres achetés par le lecteur connecté
+  let booksCache = {};          // id -> données du livre
+  let readerCleanup = null;
+
+  function price(b) {
+    if (!b.prix) return "Gratuit";
+    return Number(b.prix).toLocaleString("fr-FR") + " " + (config.devise || "GNF");
+  }
+  function coverHTML(b) {
+    const lang = b.langue || "fr";
+    return '<div class="cover">' + (b.couverture ? '<img alt="" src="' + esc(b.couverture) + '">' :
+      '<div class="ct" lang="' + esc(lang) + '" dir="' + (lang === "nqo" || lang === "ar" ? "rtl" : "ltr") + '">' + esc(b.titre) + "</div>" +
+      '<div class="ca" lang="nqo">' + esc(b.auteur || DEFAULT_AUTHOR) + "</div>") + "</div>";
+  }
+
+  // ---------- Mise en forme du texte (texte simple de l'atelier, ou markdown léger) ----------
+  function inline(s) {
+    return esc(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(^|[\s(«])\*(?!\s)(.+?)\*(?=[\s).,;:!?»]|$)/g, "$1<i>$2</i>");
+  }
+  function renderText(text) {
+    const lines = String(text || "").replace(/\r/g, "").replace(/\u2028/g, "\n").split("\n");
+    const out = []; let para = []; let list = [];
+    const flushP = () => { if (para.length) { out.push("<p>" + para.map(inline).join("<br>") + "</p>"); para = []; } };
+    const flushL = () => { if (list.length) { out.push("<ul>" + list.map((l) => "<li>" + inline(l) + "</li>").join("") + "</ul>"); list = []; } };
+    for (const raw of lines) {
+      const l = raw.trim();
+      if (!l) { flushP(); flushL(); continue; }
+      let m;
+      if ((m = l.match(/^(#{1,3})\s+(.*)$/))) { flushP(); flushL(); const n = Math.min(3, m[1].length + 1); out.push("<h" + n + ">" + inline(m[2]) + "</h" + n + ">"); continue; }
+      if ((m = l.match(/^[-•*]\s+(.*)$/)) && !/^\*\*/.test(l)) { flushP(); list.push(m[1].replace(/^\[[ xX]\]\s*/, "☐ ")); continue; }
+      if (/^\d+[.)]\s+/.test(l)) { flushP(); flushL(); out.push("<p>" + inline(l) + "</p>"); continue; }
+      flushL(); para.push(l);
+    }
+    flushP(); flushL();
+    return out.join("");
+  }
+
+  // ---------- Filigrane au nom du lecteur ----------
+  function watermark(label) {
+    const t = String(label || "").replace(/[<>&"]/g, "");
+    const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='320' height='200'><text x='20' y='120' transform='rotate(-25 160 100)' font-family='Arial' font-size='15' fill='#000'>" + t + "</text></svg>";
+    return "url(\"data:image/svg+xml;utf8," + encodeURIComponent(svg) + "\")";
+  }
+
+  // ---------- Navigation ----------
+  function go(h) { if (location.hash === h) route(); else location.hash = h; }
+  window.addEventListener("hashchange", route);
+  $("goHome").onclick = () => go("#/");
+  $("btnBib").onclick = () => go("#/biblio");
+  $("btnAccount").onclick = () => go(auth.currentUser ? "#/compte" : "#/connexion");
+
+  function route() {
+    if (readerCleanup) { readerCleanup(); readerCleanup = null; }
+    document.body.classList.remove("reading", "sepia");
+    window.scrollTo(0, 0);
+    const p = (location.hash.replace(/^#\/?/, "") || "").split("/");
+    const v = p[0] || "";
+    if (v === "livre" && p[1]) return viewBook(p[1]);
+    if (v === "lire" && p[1]) return viewReader(p[1], parseInt(p[2] || "0", 10) || 0);
+    if (v === "acheter" && p[1]) return viewBuy(p[1]);
+    if (v === "biblio") return viewLibrary();
+    if (v === "connexion") return viewLogin(p[1] || "");
+    if (v === "compte") return viewAccount();
+    if (v === "admin") return viewAdmin(p[1] || "demandes");
+    return viewHome();
+  }
+
+  // ---------- Session ----------
+  auth.onAuthStateChanged(async (u) => {
+    owned = new Set(); client = null;
+    if (u && !isOwner()) {
+      try {
+        const [c, a] = await Promise.all([
+          db.collection("boutique_clients").doc(u.uid).get(),
+          db.collection("boutique_achats").where("uid", "==", u.uid).get()
+        ]);
+        client = c.exists ? c.data() : { nom: "", telephone: (u.email || "").split("@")[0] };
+        a.forEach((d) => owned.add(d.data().livre));
+      } catch (e) {}
+    }
+    $("btnAccount").textContent = u ? (isOwner() ? "⚙ Gestion" : "👤 Compte") : "Se connecter";
+    $("btnAccount").onclick = () => go(u ? (isOwner() ? "#/admin" : "#/compte") : "#/connexion");
+    $("btnBib").classList.toggle("hidden", !u || isOwner());
+    route();
+  });
+
+  db.collection("boutique_config").doc("public").get().then((d) => { if (d.exists) Object.assign(config, d.data()); }).catch(() => {});
+
+  async function getBook(id) {
+    if (booksCache[id]) return booksCache[id];
+    const d = await db.collection("boutique_livres").doc(id).get();
+    if (!d.exists) return null;
+    booksCache[id] = Object.assign({ id: d.id }, d.data());
+    return booksCache[id];
+  }
+
+  // ---------- Vitrine ----------
+  async function viewHome() {
+    app.innerHTML = '<h2 class="title">Nos livres</h2><p class="muted">Lisez un extrait gratuit, achetez, et le livre s\'ouvre dans votre bibliothèque.</p><div class="grid" id="grid"><p class="muted">Chargement…</p></div>' +
+      '<div class="foot">ESSOR MANDING <span class="nko">ߒߞߏ</span> · <span class="nko">ߒߞߏ ߦߋ߫ ߛߌߣߌ߲ ߠߋ߬ ߘߌ߫</span></div>';
+    try {
+      const snap = await db.collection("boutique_livres").where("publie", "==", true).get();
+      const list = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())).sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
+      list.forEach((b) => { booksCache[b.id] = b; });
+      const g = $("grid"); if (!g) return;
+      if (!list.length) { g.innerHTML = '<p class="muted">Les premiers livres arrivent bientôt.</p>'; return; }
+      g.innerHTML = "";
+      list.forEach((b) => {
+        const el = document.createElement("div"); el.className = "book";
+        el.innerHTML = coverHTML(b) + '<div class="meta"><div class="t" lang="' + esc(b.langue || "fr") + '">' + esc(b.titre) + '</div><div class="p">' +
+          (owned.has(b.id) ? "✅ Dans vos livres" : esc(price(b))) + '</div><div class="muted">' + esc(LANGS[b.langue] || "") + "</div></div>";
+        el.onclick = () => go("#/livre/" + b.id);
+        g.appendChild(el);
+      });
+    } catch (e) { const g = $("grid"); if (g) g.innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; }
+  }
+
+  // ---------- Fiche du livre ----------
+  async function viewBook(id) {
+    app.innerHTML = '<p class="muted">Chargement…</p>';
+    let b; try { b = await getBook(id); } catch (e) { app.innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; return; }
+    if (!b) { app.innerHTML = '<p class="err">Ce livre n\'existe pas ou n\'est plus en vente.</p>'; return; }
+    const has = owned.has(id) || isOwner();
+    const sommaire = b.sommaire || [];
+    const dir = (b.langue === "nqo" || b.langue === "ar") ? "rtl" : "ltr";
+    let pending = null;
+    if (auth.currentUser && !has) {
+      try {
+        const q = await db.collection("boutique_demandes").where("uid", "==", auth.currentUser.uid).where("livre", "==", id).get();
+        q.forEach((d) => { if (d.data().statut === "attente") pending = d.data(); });
+      } catch (e) {}
+    }
+    app.innerHTML =
+      '<div class="hero">' + coverHTML(b) + '<div class="info">' +
+        '<h2 class="title" lang="' + esc(b.langue || "fr") + '" dir="' + dir + '" style="margin-top:0">' + esc(b.titre) + "</h2>" +
+        '<div class="muted"><span lang="nqo">' + esc(b.auteur || DEFAULT_AUTHOR) + "</span> · " + esc(LANGS[b.langue] || "") + " · " + sommaire.length + " parties</div>" +
+        '<div class="price">' + (has ? "✅ Vous avez ce livre" : esc(price(b))) + "</div>" +
+        '<div class="row">' +
+          (has ? '<button class="btn" id="bRead">📖 Lire</button>' :
+            (pending ? '<span class="chip wait">⏳ Paiement en cours de vérification</span>' : '<button class="btn" id="bBuy">' + (b.prix ? "Acheter" : "Ajouter à mes livres") + "</button>") +
+            ((b.gratuits || 0) > 0 ? '<button class="btn alt" id="bSample">Lire l\'extrait gratuit</button>' : "")) +
+        "</div>" +
+      "</div></div>" +
+      (b.description ? '<div class="card desc" lang="' + esc(b.langueDescription || "fr") + '">' + esc(b.description) + "</div>" : "") +
+      '<h3>Sommaire</h3><ul class="toc" id="toc" dir="' + dir + '" lang="' + esc(b.langue || "fr") + '"></ul>';
+    const toc = $("toc");
+    sommaire.forEach((s, i) => {
+      const free = i < (b.gratuits || 0);
+      const li = document.createElement("li");
+      if (has || free) li.className = "click";
+      li.innerHTML = "<span>" + esc(s) + '</span><span class="lock">' + (has ? "" : free ? "Gratuit" : "🔒") + "</span>";
+      if (has || free) li.onclick = () => go("#/lire/" + id + "/" + i);
+      toc.appendChild(li);
+    });
+    if ($("bRead")) $("bRead").onclick = () => go("#/lire/" + id + "/" + lastPos(id));
+    if ($("bSample")) $("bSample").onclick = () => go("#/lire/" + id + "/0");
+    if ($("bBuy")) $("bBuy").onclick = () => go(auth.currentUser ? "#/acheter/" + id : "#/connexion/" + id);
+  }
+
+  // ---------- Achat (Mobile Money, vérifié à la main) ----------
+  async function viewBuy(id) {
+    if (!auth.currentUser) return go("#/connexion/" + id);
+    const b = await getBook(id).catch(() => null);
+    if (!b) { app.innerHTML = '<p class="err">Livre introuvable.</p>'; return; }
+    if (!b.prix) {
+      app.innerHTML = '<p class="muted">Ajout en cours…</p>';
+      try { await sendRequest(b, { reference: "gratuit", expediteur: "" }); } catch (e) {}
+      app.innerHTML = '<div class="card"><p class="ok">Demande envoyée. Le livre apparaîtra dans « Mes livres » dès sa validation.</p><button class="btn" id="bBack">Retour</button></div>';
+      $("bBack").onclick = () => go("#/livre/" + id); return;
+    }
+    const lines = [];
+    if (config.orange) lines.push("Orange Money : <b class='num'>" + esc(config.orange) + "</b>");
+    if (config.mtn) lines.push("MTN Mobile Money : <b class='num'>" + esc(config.mtn) + "</b>");
+    app.innerHTML =
+      '<h2 class="title">Acheter « <span lang="' + esc(b.langue || "fr") + '">' + esc(b.titre) + "</span> »</h2>" +
+      '<div class="pay"><div>1. Envoyez <b>' + esc(price(b)) + "</b> à :</div><div style='margin:8px 0'>" + (lines.join("<br>") || "<i>Numéro de paiement bientôt disponible.</i>") + "</div>" +
+        (config.nomCompte ? "<div>Au nom de : <b>" + esc(config.nomCompte) + "</b></div>" : "") +
+        (config.consigne ? '<div class="muted" style="margin-top:6px">' + esc(config.consigne) + "</div>" : "") + "</div>" +
+      '<div class="card"><div>2. Indiquez ici votre paiement :</div><br>' +
+        '<label>Numéro qui a envoyé l\'argent</label><input class="field" id="pFrom" inputmode="tel" value="' + esc((client && client.telephone) || "") + '">' +
+        '<label>Référence ou code de la transaction (dans le SMS reçu)</label><input class="field" id="pRef" placeholder="Ex. : PP241025.1430.A12345">' +
+        '<div class="err" id="pErr"></div><button class="btn block" id="pSend">J\'ai payé — envoyer</button></div>' +
+      (config.whatsapp ? '<p class="muted center">Un souci ? <a href="https://wa.me/' + esc(digits(config.whatsapp)) + '?text=' + encodeURIComponent("Bonjour, j'ai payé le livre « " + b.titre + " »") + '" target="_blank" rel="noopener">Écrivez-nous sur WhatsApp</a>.</p>' : "") +
+      '<p class="muted center">Après vérification du paiement, le livre s\'ouvre dans « Mes livres ».</p>';
+    $("pSend").onclick = async () => {
+      const ref = $("pRef").value.trim(), from = $("pFrom").value.trim();
+      if (!ref || digits(from).length < 8) { $("pErr").textContent = "Indiquez le numéro qui a payé et la référence du SMS."; return; }
+      $("pSend").disabled = true;
+      try {
+        await sendRequest(b, { reference: ref, expediteur: from });
+        app.innerHTML = '<div class="card center"><p class="ok" style="font-size:19px">✅ Merci ! Votre demande est envoyée.</p><p>Nous vérifions le paiement. Le livre apparaîtra dans « Mes livres » dès la validation.</p><button class="btn" id="bBack">Retour au livre</button></div>';
+        $("bBack").onclick = () => go("#/livre/" + id);
+      } catch (e) { $("pErr").textContent = errText(e); $("pSend").disabled = false; }
+    };
+  }
+  function sendRequest(b, extra) {
+    const u = auth.currentUser;
+    return db.collection("boutique_demandes").add(Object.assign({
+      uid: u.uid, livre: b.id, titre: b.titre, montant: b.prix || 0, devise: config.devise || "GNF",
+      nom: (client && client.nom) || "", telephone: (client && client.telephone) || (u.email || "").split("@")[0],
+      statut: "attente", at: TS()
+    }, extra));
+  }
+
+  // ---------- Bibliothèque ----------
+  async function viewLibrary() {
+    if (!auth.currentUser) return go("#/connexion");
+    app.innerHTML = '<h2 class="title">📚 Mes livres</h2><div class="grid" id="grid"></div><div id="waits"></div>';
+    const g = $("grid");
+    if (!owned.size) g.innerHTML = '<p class="muted">Vous n\'avez pas encore de livre. <a href="#/">Voir la librairie</a>.</p>';
+    for (const id of owned) {
+      const b = await getBook(id).catch(() => null);
+      if (!b) continue;
+      const el = document.createElement("div"); el.className = "book";
+      const pos = lastPos(id), n = (b.sommaire || []).length || 1;
+      el.innerHTML = coverHTML(b) + '<div class="meta"><div class="t" lang="' + esc(b.langue || "fr") + '">' + esc(b.titre) + '</div><div class="muted">Partie ' + (pos + 1) + " / " + n + "</div></div>";
+      el.onclick = () => go("#/lire/" + id + "/" + pos);
+      g.appendChild(el);
+    }
+    try {
+      const q = await db.collection("boutique_demandes").where("uid", "==", auth.currentUser.uid).get();
+      const w = q.docs.map((d) => d.data()).filter((d) => d.statut !== "validee");
+      if (w.length) $("waits").innerHTML = "<h3>Mes demandes</h3>" + w.map((d) => '<div class="card"><b>' + esc(d.titre) + "</b><br>" +
+        (d.statut === "attente" ? '<span class="chip wait">⏳ En vérification</span>' : '<span class="chip no">Refusée</span> ' + esc(d.motif || "")) + "</div>").join("");
+    } catch (e) {}
+  }
+  function lastPos(id) { const p = store.get("pos_" + id, null); if (p != null) return p; return (client && client.progres && client.progres[id]) || 0; }
+
+  // ---------- Liseuse ----------
+  async function viewReader(id, idx) {
+    const b = await getBook(id).catch(() => null);
+    if (!b) { app.innerHTML = '<p class="err">Livre introuvable.</p>'; return; }
+    const has = owned.has(id) || isOwner();
+    const free = b.gratuits || 0;
+    const n = (b.sommaire || []).length;
+    if (idx >= n) idx = Math.max(0, n - 1);
+    if (!has && idx >= free) { go("#/livre/" + id); return; }
+    document.body.classList.add("reading");
+    let size = store.get("fontSize", 19);
+    if (store.get("sepia", false)) document.body.classList.add("sepia");
+    const lang = b.langue || "fr", dir = (lang === "nqo" || lang === "ar") ? "rtl" : "ltr";
+    app.innerHTML =
+      '<div class="reader" id="reader">' +
+        '<div class="rbar"><button id="rBack" title="Retour">←</button><button id="rToc" title="Sommaire">☰</button>' +
+          '<div class="rt" lang="' + esc(lang) + '">' + esc(b.titre) + '</div>' +
+          '<button id="rMinus" title="Plus petit">A−</button><button id="rPlus" title="Plus grand">A+</button><button id="rTheme" title="Couleur du papier">◐</button></div>' +
+        '<div class="wm" id="wm"></div>' +
+        '<article class="page" id="page" lang="' + esc(lang) + '" dir="' + dir + '"><p class="muted">Chargement…</p></article>' +
+      "</div>";
+    const page = $("page");
+    const applySize = () => { page.style.fontSize = size + "px"; };
+    applySize();
+    const who = (!isOwner() && client) ? [client.nom, client.telephone].filter(Boolean).join(" · ") + " · " : "";
+    $("wm").style.backgroundImage = watermark(who + "ESSOR MANDING");
+    $("rBack").onclick = () => go(has ? "#/biblio" : "#/livre/" + id);
+    $("rMinus").onclick = () => { size = Math.max(14, size - 1); store.set("fontSize", size); applySize(); };
+    $("rPlus").onclick = () => { size = Math.min(32, size + 1); store.set("fontSize", size); applySize(); };
+    $("rTheme").onclick = () => { const s = !document.body.classList.contains("sepia"); document.body.classList.toggle("sepia", s); store.set("sepia", s); };
+    $("rToc").onclick = () => {
+      const d = document.createElement("div"); d.className = "drawer";
+      d.innerHTML = '<div class="pane"><h3>Sommaire</h3><ul class="toc" dir="' + dir + '" lang="' + esc(lang) + '"></ul></div>';
+      const ul = d.querySelector("ul");
+      (b.sommaire || []).forEach((s, i) => {
+        const ok = has || i < free;
+        const li = document.createElement("li"); if (i === idx) li.className = "cur";
+        li.innerHTML = "<span>" + esc(s) + '</span><span class="lock">' + (ok ? "" : "🔒") + "</span>";
+        li.onclick = (ev) => { ev.stopPropagation(); d.remove(); if (ok) go("#/lire/" + id + "/" + i); else go("#/livre/" + id); };
+        ul.appendChild(li);
+      });
+      d.onclick = (ev) => { if (ev.target === d) d.remove(); };
+      document.body.appendChild(d);
+    };
+    // Protection : pas de sélection, de copie, de menu, ni d'impression
+    const stop = (e) => e.preventDefault();
+    ["copy", "cut", "contextmenu", "selectstart", "dragstart"].forEach((t) => document.addEventListener(t, stop));
+    const onScroll = () => { const h = document.documentElement; const max = h.scrollHeight - h.clientHeight; $("prog").style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + "%"; };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    readerCleanup = () => {
+      ["copy", "cut", "contextmenu", "selectstart", "dragstart"].forEach((t) => document.removeEventListener(t, stop));
+      window.removeEventListener("scroll", onScroll); $("prog").style.width = "0";
+    };
+    try {
+      const snap = await db.collection("boutique_livres").doc(id).collection("chapitres").doc(String(idx).padStart(3, "0")).get();
+      if (!snap.exists) { page.innerHTML = '<p class="err">Cette partie n\'est pas disponible.</p>'; return; }
+      const ch = snap.data();
+      page.innerHTML = (ch.etiquette ? '<div class="lab">' + esc(ch.etiquette) + "</div>" : "") +
+        (ch.titre ? "<h1>" + inline(ch.titre) + "</h1>" : "") + renderText(ch.texte);
+      const nav = document.createElement("div"); nav.className = "nav"; nav.setAttribute("dir", "ltr");
+      const prevOk = idx > 0, nextOk = idx + 1 < n;
+      nav.innerHTML = (prevOk ? '<button class="btn alt" id="rPrev">← Précédent</button>' : "<span></span>") +
+        (nextOk ? '<button class="btn" id="rNext">Suivant →</button>' : "");
+      page.appendChild(nav);
+      if (prevOk) $("rPrev").onclick = () => go("#/lire/" + id + "/" + (idx - 1));
+      if (nextOk) $("rNext").onclick = () => go("#/lire/" + id + "/" + (idx + 1));
+      if (!has && idx + 1 >= free) {
+        const e = document.createElement("div"); e.className = "endbox"; e.setAttribute("dir", "ltr"); e.setAttribute("lang", "fr");
+        e.innerHTML = "<b>Fin de l'extrait gratuit.</b><br>La suite vous attend : " + esc(price(b)) + '<br><br><button class="btn gold" id="rBuy">Acheter le livre</button>';
+        page.appendChild(e);
+        $("rBuy").onclick = () => go(auth.currentUser ? "#/acheter/" + id : "#/connexion/" + id);
+        if ($("rNext")) $("rNext").remove();
+      }
+      if (has) {
+        store.set("pos_" + id, idx);
+        if (auth.currentUser && !isOwner()) db.collection("boutique_clients").doc(auth.currentUser.uid).set({ progres: { [id]: idx } }, { merge: true }).catch(() => {});
+      }
+    } catch (e) { page.innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; }
+  }
+
+  // ---------- Connexion / inscription ----------
+  function viewLogin(next) {
+    if (auth.currentUser) return go(next ? "#/livre/" + next : "#/");
+    let mode = "in";
+    const draw = () => {
+      app.innerHTML = '<div style="max-width:420px;margin:10px auto">' +
+        '<h2 class="title">' + (mode === "in" ? "Se connecter" : "Créer mon compte") + "</h2>" +
+        (mode === "up" ? '<label>Nom et prénom</label><input class="field" id="lName" autocomplete="name">' : "") +
+        '<label>Numéro de téléphone (avec l\'indicatif, ex. 224…)</label><input class="field" id="lTel" inputmode="tel" autocomplete="tel">' +
+        '<label>Mot de passe</label><input class="field" id="lPw" type="password" autocomplete="' + (mode === "in" ? "current-password" : "new-password") + '">' +
+        '<div class="err" id="lErr"></div>' +
+        '<button class="btn block" id="lGo">' + (mode === "in" ? "Se connecter" : "Créer mon compte") + "</button><br>" +
+        '<button class="btn alt block" id="lSwitch">' + (mode === "in" ? "Pas encore de compte ? S'inscrire" : "J'ai déjà un compte") + "</button>" +
+        '<p class="muted center">Mot de passe oublié ? Écrivez-nous' + (config.whatsapp ? ' sur <a href="https://wa.me/' + esc(digits(config.whatsapp)) + '" target="_blank" rel="noopener">WhatsApp</a>' : "") + ".</p></div>";
+      $("lSwitch").onclick = () => { mode = mode === "in" ? "up" : "in"; draw(); };
+      $("lGo").onclick = async () => {
+        const tel = digits($("lTel").value), pw = $("lPw").value;
+        const name = mode === "up" ? $("lName").value.trim() : "";
+        if (tel.length < 8 || pw.length < 6 || (mode === "up" && !name)) { $("lErr").textContent = mode === "up" ? "Nom, numéro et mot de passe (6 caractères minimum)." : "Numéro et mot de passe."; return; }
+        $("lGo").disabled = true;
+        const email = tel + "@" + CLIENT_DOMAIN;
+        try {
+          if (mode === "in") await auth.signInWithEmailAndPassword(email, pw);
+          else {
+            const cred = await auth.createUserWithEmailAndPassword(email, pw);
+            await db.collection("boutique_clients").doc(cred.user.uid).set({ nom: name, telephone: tel, createdAt: TS() });
+          }
+          if (next) location.hash = "#/livre/" + next; else location.hash = "#/";
+        } catch (e) { $("lErr").textContent = errText(e); $("lGo").disabled = false; }
+      };
+    };
+    draw();
+  }
+  function viewAccount() {
+    if (!auth.currentUser) return go("#/connexion");
+    app.innerHTML = '<h2 class="title">Mon compte</h2><div class="card"><b>' + esc((client && client.nom) || "") + "</b><br>" +
+      esc((client && client.telephone) || "") + "</div>" +
+      '<button class="btn block" id="aBib">📚 Mes livres</button><br><button class="btn alt block" id="aOut">Se déconnecter</button>';
+    $("aBib").onclick = () => go("#/biblio");
+    $("aOut").onclick = () => auth.signOut().then(() => go("#/"));
+  }
+
+  // =====================================================================
+  //  GESTION (compte propriétaire uniquement)
+  // =====================================================================
+  function viewAdmin(tab) {
+    if (!isOwner()) {
+      app.innerHTML = '<div style="max-width:420px;margin:10px auto"><h2 class="title">Gestion</h2><p class="muted">Réservé au propriétaire. Connectez-vous avec le compte propriétaire de l\'atelier.</p>' +
+        '<label>Mot de passe propriétaire</label><input class="field" id="oPw" type="password"><div class="err" id="oErr"></div><button class="btn block" id="oGo">Entrer</button></div>';
+      $("oGo").onclick = () => auth.signInWithEmailAndPassword(OWNER_EMAIL, $("oPw").value).then(() => go("#/admin")).catch((e) => { $("oErr").textContent = errText(e); });
+      return;
+    }
+    const tabs = { demandes: "💰 Demandes", livres: "📚 Livres en vente", publier: "⬆ Publier", offrir: "🎁 Offrir", reglages: "⚙ Réglages" };
+    app.innerHTML = '<h2 class="title">Gestion de la librairie</h2><div class="tabs">' +
+      Object.keys(tabs).map((k) => '<button data-t="' + k + '" class="' + (k === tab ? "on" : "") + '">' + tabs[k] + "</button>").join("") +
+      '<button id="admOut">Se déconnecter</button></div><div id="adm"></div>';
+    app.querySelectorAll("[data-t]").forEach((b) => { b.onclick = () => go("#/admin/" + b.dataset.t); });
+    $("admOut").onclick = () => auth.signOut().then(() => go("#/"));
+    const box = $("adm");
+    if (tab === "demandes") return admRequests(box);
+    if (tab === "livres") return admBooks(box);
+    if (tab === "publier") return admPublish(box);
+    if (tab === "offrir") return admGift(box);
+    if (tab === "reglages") return admSettings(box);
+  }
+
+  async function grant(uid, livre, source) {
+    await db.collection("boutique_achats").doc(uid + "_" + livre).set({ uid, livre, source: source || "", at: TS() });
+  }
+
+  async function admRequests(box) {
+    box.innerHTML = '<p class="muted">Vérifiez chaque paiement dans votre téléphone (SMS Orange Money / MTN) avant de valider.</p><div id="rq">Chargement…</div>';
+    const unsub = db.collection("boutique_demandes").where("statut", "==", "attente").onSnapshot((snap) => {
+      const rq = $("rq"); if (!rq) { unsub(); return; }
+      const list = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())).sort((a, b) => ms(a.at) - ms(b.at));
+      if (!list.length) { rq.innerHTML = '<p class="ok">Aucune demande en attente. 👍</p>'; return; }
+      rq.innerHTML = "";
+      list.forEach((d) => {
+        const c = document.createElement("div"); c.className = "card";
+        c.innerHTML = "<b>" + esc(d.titre) + "</b> — " + Number(d.montant || 0).toLocaleString("fr-FR") + " " + esc(d.devise || "") +
+          "<br>Client : " + esc(d.nom) + " (" + esc(d.telephone) + ")" +
+          "<br>Payé depuis : <b>" + esc(d.expediteur || "—") + "</b> · Réf. : <b>" + esc(d.reference || "—") + "</b>" +
+          '<br><span class="muted">' + fmtDate(d.at) + "</span>" +
+          '<div class="row" style="margin-top:10px"><button class="btn sm" data-a="ok">✔ Valider</button><button class="btn sm red" data-a="no">✖ Refuser</button>' +
+          (d.telephone ? '<a class="btn sm alt" target="_blank" rel="noopener" href="https://wa.me/' + esc(digits(d.telephone)) + '">WhatsApp</a>' : "") + "</div>";
+        c.querySelector('[data-a="ok"]').onclick = async () => {
+          try { await grant(d.uid, d.livre, "demande " + d.id); await db.collection("boutique_demandes").doc(d.id).update({ statut: "validee", traiteeLe: TS() }); toast("Livre débloqué pour " + (d.nom || d.telephone)); }
+          catch (e) { toast(errText(e)); }
+        };
+        c.querySelector('[data-a="no"]').onclick = async () => {
+          const motif = prompt("Motif du refus (le client le verra) :", "Paiement introuvable");
+          if (motif == null) return;
+          try { await db.collection("boutique_demandes").doc(d.id).update({ statut: "refusee", motif, traiteeLe: TS() }); } catch (e) { toast(errText(e)); }
+        };
+        rq.appendChild(c);
+      });
+    }, (e) => { const rq = $("rq"); if (rq) rq.innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; });
+    readerCleanup = unsub;
+  }
+
+  async function admBooks(box) {
+    box.innerHTML = "Chargement…";
+    try {
+      const snap = await db.collection("boutique_livres").get();
+      const list = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())).sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
+      if (!list.length) { box.innerHTML = '<p class="muted">Aucun livre. Allez dans « Publier ».</p>'; return; }
+      box.innerHTML = "";
+      list.forEach((b) => {
+        booksCache[b.id] = b;
+        const c = document.createElement("div"); c.className = "card";
+        c.innerHTML = '<div class="row" style="justify-content:space-between"><b lang="' + esc(b.langue) + '">' + esc(b.titre) + "</b>" +
+          (b.publie ? '<span class="chip">En vente</span>' : '<span class="chip wait">Masqué</span>') + "</div>" +
+          '<div class="muted">' + (b.sommaire || []).length + " parties · " + (b.gratuits || 0) + " gratuites · " + esc(price(b)) + "</div>" +
+          '<div class="row" style="margin-top:10px"><button class="btn sm alt" data-a="edit">Modifier</button><button class="btn sm alt" data-a="see">Voir</button>' +
+          '<button class="btn sm ' + (b.publie ? "red" : "") + '" data-a="pub">' + (b.publie ? "Retirer de la vente" : "Mettre en vente") + "</button></div>";
+        c.querySelector('[data-a="see"]').onclick = () => go("#/livre/" + b.id);
+        c.querySelector('[data-a="pub"]').onclick = () => db.collection("boutique_livres").doc(b.id).update({ publie: !b.publie }).then(() => admBooks(box)).catch((e) => toast(errText(e)));
+        c.querySelector('[data-a="edit"]').onclick = () => bookForm(box, b, null);
+        box.appendChild(c);
+      });
+    } catch (e) { box.innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; }
+  }
+
+  // Formulaire commun (nouveau livre ou modification). parts = parties à (re)publier, ou null pour ne changer que la fiche.
+  function bookForm(box, b, parts, sourceNote) {
+    b = b || {};
+    box.innerHTML = '<div class="card">' + (sourceNote ? '<p class="muted">' + esc(sourceNote) + "</p>" : "") +
+      '<label>Titre</label><input class="field" id="fT" value="' + esc(b.titre || "") + '">' +
+      '<label>Auteur</label><input class="field" id="fA" lang="nqo" value="' + esc(b.auteur || DEFAULT_AUTHOR) + '">' +
+      '<label>Langue du livre</label><select class="field" id="fL">' + Object.keys(LANGS).map((k) => '<option value="' + k + '"' + ((b.langue || "fr") === k ? " selected" : "") + ">" + LANGS[k] + "</option>").join("") + "</select>" +
+      '<label>Présentation (affichée sur la fiche du livre)</label><textarea class="field" id="fD" rows="5">' + esc(b.description || "") + "</textarea>" +
+      '<label>Prix (0 = gratuit)</label><input class="field" id="fP" inputmode="numeric" value="' + esc(b.prix || 0) + '">' +
+      '<label>Nombre de parties gratuites (l\'extrait)</label><input class="field" id="fG" inputmode="numeric" value="' + esc(b.gratuits == null ? 2 : b.gratuits) + '">' +
+      '<label>Ordre dans la vitrine (1 = en premier)</label><input class="field" id="fO" inputmode="numeric" value="' + esc(b.ordre || 1) + '">' +
+      '<label>Couverture (image, facultatif)</label><input class="field" id="fC" type="file" accept="image/*">' +
+      (b.couverture ? '<img src="' + esc(b.couverture) + '" style="width:90px;border-radius:6px" alt="">' : "") +
+      '<label style="display:block;margin-top:10px"><input type="checkbox" id="fV"' + (b.publie ? " checked" : "") + "> Mettre en vente tout de suite</label>" +
+      (parts ? '<p class="muted">' + parts.length + " parties seront publiées.</p>" : "") +
+      '<div class="err" id="fErr"></div><button class="btn block" id="fGo">' + (parts ? "Publier" : "Enregistrer") + "</button></div>";
+    let cover = b.couverture || "";
+    $("fC").onchange = (ev) => { const f = ev.target.files[0]; if (f) shrinkImage(f).then((u) => { cover = u; toast("Couverture prête."); }).catch(() => toast("Image illisible.")); };
+    $("fGo").onclick = async () => {
+      const titre = $("fT").value.trim(); if (!titre) { $("fErr").textContent = "Le titre est obligatoire."; return; }
+      $("fGo").disabled = true; $("fGo").textContent = "Publication…";
+      const data = {
+        titre, auteur: $("fA").value.trim(), langue: $("fL").value, description: $("fD").value.trim(),
+        prix: Math.max(0, parseInt(digits($("fP").value) || "0", 10)), gratuits: Math.max(0, parseInt(digits($("fG").value) || "0", 10)),
+        ordre: parseInt(digits($("fO").value) || "1", 10), couverture: cover, publie: $("fV").checked, majLe: TS()
+      };
+      try {
+        const id = b.id || db.collection("boutique_livres").doc().id;
+        const ref = db.collection("boutique_livres").doc(id);
+        if (parts) {
+          parts.forEach((p) => { p.etiquette = partLabel(p, data.langue); });
+          data.sommaire = parts.map((p) => (p.etiquette && p.titre ? p.etiquette + " — " + p.titre : p.titre || p.etiquette || ""));
+          const old = await ref.collection("chapitres").get();
+          for (let i = 0; i < old.docs.length; i += 400) { const bt = db.batch(); old.docs.slice(i, i + 400).forEach((d) => bt.delete(d.ref)); await bt.commit(); }
+          await ref.set(data, { merge: true });
+          for (let i = 0; i < parts.length; i += 20) {
+            const bt = db.batch();
+            parts.slice(i, i + 20).forEach((p, j) => {
+              const k = i + j;
+              bt.set(ref.collection("chapitres").doc(String(k).padStart(3, "0")), { ordre: k, etiquette: p.etiquette || "", titre: p.titre || "", texte: p.texte || "", gratuit: k < data.gratuits });
+            });
+            await bt.commit();
+          }
+        } else {
+          await ref.set(data, { merge: true });
+          if (data.gratuits !== b.gratuits) {
+            const all = await ref.collection("chapitres").get();
+            const bt = db.batch(); all.forEach((d) => bt.update(d.ref, { gratuit: (d.data().ordre || 0) < data.gratuits })); await bt.commit();
+          }
+        }
+        delete booksCache[id];
+        toast("Enregistré ✔"); go("#/admin/livres");
+      } catch (e) { $("fErr").textContent = errText(e); $("fGo").disabled = false; $("fGo").textContent = parts ? "Publier" : "Enregistrer"; }
+    };
+  }
+
+  function shrinkImage(file) {
+    return new Promise((res, rej) => {
+      const img = new Image(); const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const w = 600, h = Math.round(img.height * (w / img.width));
+        const c = document.createElement("canvas"); c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img, 0, 0, w, h); URL.revokeObjectURL(url);
+        res(c.toDataURL("image/jpeg", 0.78));
+      };
+      img.onerror = rej; img.src = url;
+    });
+  }
+
+  const KIND_FR = { preface: "Préface", intro: "Introduction", chapter: "Chapitre", conclusion: "Conclusion", annex: "Annexe" };
+  const KIND_NKO = { preface: "ߢߍߛߓߍ", intro: "ߢߍߞߎߡߊ", chapter: "ߛߌ߰ߘߊ", conclusion: "ߞߎ߲߬ߘߏ߲", annex: "ߟߊ߬ߝߊߙߊ߲" };
+  const nkDigits = (x) => String(x).replace(/[0-9]/g, (d) => String.fromCharCode(0x07C0 + +d));
+  function partLabel(p, lang) {
+    if (!p.genre) return p.etiquette || "";
+    if (lang === "nqo") return (KIND_NKO[p.genre] || "") + (p.genre === "chapter" ? " " + nkDigits(p.numero) : "");
+    return (KIND_FR[p.genre] || "") + (p.genre === "chapter" ? " " + p.numero : "");
+  }
+  async function admPublish(box) {
+    box.innerHTML = '<div class="card"><h3 style="margin-top:0">Depuis l\'atelier d\'écriture</h3><div id="atl">Chargement…</div></div>' +
+      '<div class="card"><h3 style="margin-top:0">Depuis un fichier texte (.txt ou .md)</h3>' +
+      '<p class="muted">Chaque ligne qui commence par « # » ou « ## » ouvre une nouvelle partie. Sans titres, une ligne « Chapitre 3 : … » ou « Préface : … » marque aussi une partie.</p>' +
+      '<input class="field" type="file" id="txtFile" accept=".txt,.md,text/plain,text/markdown"></div>';
+    try {
+      const snap = await db.collection("atelier_books").orderBy("createdAt", "asc").get();
+      const atl = $("atl"); atl.innerHTML = "";
+      if (snap.empty) atl.innerHTML = '<p class="muted">Aucun livre dans l\'atelier.</p>';
+      snap.forEach((d) => {
+        const bk = d.data();
+        const row = document.createElement("div"); row.className = "row"; row.style.margin = "6px 0";
+        row.innerHTML = '<b style="flex:1" lang="nqo">' + esc(bk.title) + '</b><button class="btn sm">Préparer</button>';
+        row.querySelector("button").onclick = async () => {
+          const cs = await d.ref.collection("chapters").orderBy("order", "asc").get();
+          let num = 0;
+          const parts = cs.docs.map((c) => c.data()).filter((c) => (c.text || "").trim()).map((c) => {
+            const k = c.kind || "chapter"; if (k === "chapter") num++;
+            return { genre: k, numero: num, titre: c.title || "", texte: c.text || "" };
+          });
+          if (!parts.length) { toast("Ce livre n'a pas encore de texte."); return; }
+          const existing = await getBook("atl_" + d.id).catch(() => null);
+          bookForm(box, existing || { id: "atl_" + d.id, titre: bk.title, langue: "nqo" }, parts,
+            existing ? "Ce livre est déjà en vente : la publication remplace son texte par la version actuelle de l'atelier (les achats restent valables)." : "Nouveau livre tiré de l'atelier.");
+          const f = box.querySelector("#fG"); if (f && !existing) f.value = "2";
+        };
+        atl.appendChild(row);
+      });
+    } catch (e) { $("atl").innerHTML = '<p class="err">' + esc(errText(e)) + "</p>"; }
+    $("txtFile").onchange = (ev) => {
+      const f = ev.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => {
+        const parts = splitText(String(r.result));
+        if (!parts.length) { toast("Aucune partie trouvée."); return; }
+        bookForm(box, { titre: f.name.replace(/\.[^.]+$/, ""), langue: "fr" }, parts, "Fichier « " + f.name + " » : " + parts.length + " parties trouvées.");
+      };
+      r.readAsText(f, "utf-8");
+    };
+  }
+  function splitText(txt) {
+    const lines = txt.replace(/\r/g, "").replace(/^\uFEFF/, "").split("\n");
+    const hasMd = lines.some((l) => /^#{1,2}\s+\S/.test(l));
+    const HEAD = /^(Préface|Introduction|Conclusion|Annexe(?:s)?(?:\s+\d+)?|Chapitre\s+\d+)\s*[:—–-]\s*(.*)$/i;
+    const parts = []; let cur = null;
+    for (const l of lines) {
+      let m;
+      if (hasMd && (m = l.match(/^(#{1,2})\s+(.*)$/))) {
+        const t = m[2].trim();
+        const mm = t.match(/^(Chapitre\s+\d+|Préface|Introduction|Conclusion|Annexe\s*\d*)\s*[:—–-]\s*(.*)$/i);
+        cur = mm ? { etiquette: mm[1], titre: mm[2], texte: "" } : { etiquette: "", titre: t, texte: "" };
+        parts.push(cur); continue;
+      }
+      if (!hasMd && (m = l.trim().match(HEAD))) { cur = { etiquette: m[1], titre: m[2], texte: "" }; parts.push(cur); continue; }
+      if (!cur) { if (!l.trim()) continue; cur = { etiquette: "", titre: "", texte: "" }; parts.push(cur); }
+      cur.texte += l + "\n";
+    }
+    // fusionne une partie « titre seul » (ex. « # Partie IV ») avec la suivante
+    const out = [];
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      if (!p.texte.trim() && parts[i + 1]) { parts[i + 1].texte = "# " + (p.titre || p.etiquette) + "\n\n" + parts[i + 1].texte; continue; }
+      out.push(p);
+    }
+    return out;
+  }
+
+  async function admGift(box) {
+    box.innerHTML = '<div class="card"><p class="muted">Pour un client qui a payé par WhatsApp ou en espèces, ou pour offrir un livre. Le client doit d\'abord avoir créé son compte.</p>' +
+      '<label>Numéro du client</label><input class="field" id="gTel" inputmode="tel"><label>Livre</label><select class="field" id="gBook"></select>' +
+      '<div class="err" id="gErr"></div><button class="btn block" id="gGo">Débloquer le livre</button></div>';
+    try {
+      const snap = await db.collection("boutique_livres").get();
+      $("gBook").innerHTML = snap.docs.map((d) => '<option value="' + esc(d.id) + '">' + esc(d.data().titre) + "</option>").join("");
+    } catch (e) {}
+    $("gGo").onclick = async () => {
+      const tel = digits($("gTel").value), livre = $("gBook").value;
+      if (tel.length < 8 || !livre) { $("gErr").textContent = "Numéro et livre."; return; }
+      try {
+        const q = await db.collection("boutique_clients").where("telephone", "==", tel).limit(1).get();
+        if (q.empty) { $("gErr").textContent = "Aucun compte avec ce numéro. Demandez au client de s'inscrire d'abord."; return; }
+        await grant(q.docs[0].id, livre, "offert / manuel");
+        $("gErr").textContent = ""; toast("Livre débloqué ✔"); $("gTel").value = "";
+      } catch (e) { $("gErr").textContent = errText(e); }
+    };
+  }
+
+  async function admSettings(box) {
+    box.innerHTML = '<div class="card">' +
+      '<label>Devise affichée</label><input class="field" id="sDev" value="' + esc(config.devise || "GNF") + '">' +
+      '<label>Numéro Orange Money</label><input class="field" id="sOr" inputmode="tel" value="' + esc(config.orange || "") + '">' +
+      '<label>Numéro MTN Mobile Money</label><input class="field" id="sMt" inputmode="tel" value="' + esc(config.mtn || "") + '">' +
+      '<label>Nom affiché pour le compte qui reçoit</label><input class="field" id="sNm" value="' + esc(config.nomCompte || "ESSOR MANDING") + '">' +
+      '<label>Numéro WhatsApp du service client</label><input class="field" id="sWa" inputmode="tel" value="' + esc(config.whatsapp || "") + '">' +
+      '<label>Consigne de paiement (facultatif)</label><textarea class="field" id="sCo" rows="3">' + esc(config.consigne || "") + "</textarea>" +
+      '<button class="btn block" id="sGo">Enregistrer</button></div>';
+    $("sGo").onclick = async () => {
+      const c = { devise: $("sDev").value.trim() || "GNF", orange: $("sOr").value.trim(), mtn: $("sMt").value.trim(), nomCompte: $("sNm").value.trim(), whatsapp: $("sWa").value.trim(), consigne: $("sCo").value.trim() };
+      try { await db.collection("boutique_config").doc("public").set(c); Object.assign(config, c); toast("Réglages enregistrés ✔"); } catch (e) { toast(errText(e)); }
+    };
+  }
+})();
+</script>
+</body>
+</html>
